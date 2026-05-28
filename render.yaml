@@ -1,0 +1,10 @@
+# Render.com 部署配置
+services:
+  - type: web
+    name: xiamen-weather
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -c "from waitress import serve; from app import app; import os; serve(app, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))"
+    envVars:
+      - key: AUTO_BROWSER
+        value: "0"

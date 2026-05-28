@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4facfe"/>
+      <stop offset="60%" stop-color="#00f2fe"/>
+      <stop offset="100%" stop-color="#43e97b"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff9a00"/>
+      <stop offset="100%" stop-color="#ff5e00"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0066cc"/>
+      <stop offset="100%" stop-color="#004d99"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景圆 -->
+  <circle cx="100" cy="100" r="98" fill="url(#sky)" stroke="#2d89ef" stroke-width="3"/>
+
+  <!-- 太阳 -->
+  <circle cx="65" cy="55" r="30" fill="url(#sun)" opacity="0.95"/>
+  <!-- 太阳光芒 -->
+  <g stroke="#ff9a00" stroke-width="4" stroke-linecap="round" opacity="0.7">
+    <line x1="65" y1="12" x2="65" y2="4"/>
+    <line x1="65" y1="98" x2="65" y2="106"/>
+    <line x1="22" y1="55" x2="14" y2="55"/>
+    <line x1="108" y1="55" x2="116" y2="55"/>
+    <line x1="35" y1="25" x2="29" y2="19"/>
+    <line x1="95" y1="85" x2="101" y2="91"/>
+    <line x1="95" y1="25" x2="101" y2="19"/>
+    <line x1="35" y1="85" x2="29" y2="91"/>
+  </g>
+
+  <!-- 云 -->
+  <g fill="white" opacity="0.9">
+    <ellipse cx="120" cy="60" rx="25" ry="14"/>
+    <ellipse cx="105" cy="54" rx="18" ry="12"/>
+    <ellipse cx="138" cy="55" rx="16" ry="11"/>
+    <ellipse cx="122" cy="50" rx="15" ry="10"/>
+  </g>
+
+  <!-- 白鹭剪影 -->
+  <g fill="white" transform="translate(5, 5)">
+    <!-- 身体 -->
+    <ellipse cx="65" cy="6" rx="22" ry="10" transform="rotate(-10, 65, 6)"/>
+    <!-- 头颈 -->
+    <path d="M85,2 Q92,-10 98,-8 Q100,-2 95,3" fill="white"/>
+    <!-- 喙 -->
+    <polygon points="98,-8 112,-7 98,-4" fill="#ff6600"/>
+    <!-- 翅膀 -->
+    <path d="M65,2 Q55,-20 30,-28 Q20,-30 15,-25 Q25,-18 45,-12 Q55,-8 65,2" fill="white" opacity="0.95"/>
+    <!-- 尾 -->
+    <path d="M45,8 Q35,12 28,18" stroke="white" stroke-width="3" fill="none"/>
+    <!-- 腿 -->
+    <line x1="55" y1="14" x2="52" y2="26" stroke="#ff6600" stroke-width="2"/>
+    <line x1="62" y1="14" x2="64" y2="26" stroke="#ff6600" stroke-width="2"/>
+  </g>
+
+  <!-- 海浪 -->
+  <g fill="url(#wave)" opacity="0.85">
+    <path d="M0,135 Q25,120 50,135 Q75,150 100,135 Q125,120 150,135 Q175,150 200,135 L200,170 L0,170 Z"/>
+  </g>
+  <g fill="#0088dd" opacity="0.7">
+    <path d="M0,150 Q30,138 60,150 Q90,162 120,150 Q150,138 180,150 L200,145 L200,170 L0,170 Z"/>
+  </g>
+  <g fill="#00aaff" opacity="0.5">
+    <path d="M0,162 Q40,150 80,162 Q120,174 160,162 L200,158 L200,170 L0,170 Z"/>
+  </g>
+
+  <!-- 小雨滴 -->
+  <g fill="#aaddff" opacity="0.6">
+    <ellipse cx="135" cy="85" rx="2" ry="4"/>
+    <ellipse cx="150" cy="95" rx="2" ry="4"/>
+    <ellipse cx="142" cy="102" rx="2" ry="4"/>
+  </g>
+</svg>
