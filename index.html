@@ -134,7 +134,7 @@
     <canvas id="bgCanvas"></canvas>
     <div class="container">
         <header>
-            <h1>厦门天气 <span style="font-size:8px;color:rgba(255,255,255,0.4);vertical-align:super;">v15</span></h1>
+            <h1>厦门天气 <span style="font-size:8px;color:rgba(255,255,255,0.4);vertical-align:super;">v16</span></h1>
             <span class="date" id="updateTime"></span>
         </header>
 
@@ -431,6 +431,7 @@
             canvas.height = H;
             canvas.style.width = maxW + 'px';
             canvas.style.height = H + 'px';
+            generateBuildings();
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -440,9 +441,11 @@
         var score = 0, level = 0, gameOver = false, frame = 0;
         var shieldFrames = 0, levelUpFlash = 0;
         var drops = [], particles = [], floatTexts = [];
+        var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        var speedMul = isTouch ? 1.35 : 1.0;
 
-        function getSpeed() { return 0.55 + level * 0.22; }
-        function getSpawnRate() { return Math.max(18, 55 - level * 6); }
+        function getSpeed() { return (0.8 + level * 0.28) * speedMul; }
+        function getSpawnRate() { return Math.max(14, 48 - level * 5); }
         function getLightningChance() { return Math.min(0.28, 0.04 + level * 0.03); }
 
         function spawnDrop() {
@@ -506,8 +509,9 @@
                 drops[i].y += drops[i].speed;
                 if (drops[i].y > H + 25*scale) { drops.splice(i,1); continue; }
 
+                var groundY = H - 28*scale;
                 var dx = drops[i].x - playerX;
-                var dy = drops[i].y - (H - playerH - 5*scale);
+                var dy = drops[i].y - (groundY - playerH + 10*scale);
                 var dist = Math.sqrt(dx*dx + dy*dy);
                 if (dist < drops[i].r + 32*scale) {
                     if (drops[i].type === 'lightning') {
@@ -525,7 +529,8 @@
                     var newLevel = Math.floor(score / 100);
                     if (newLevel > level) {
                         level = newLevel; shieldFrames = 90; levelUpFlash = 35;
-                        addParticles(playerX, H-playerH, '#ffd700', 50);
+                        var groundY = H - 28*scale;
+                        addParticles(playerX, groundY-playerH+10*scale, '#ffd700', 50);
                         addFloatText(W/2, H/2-15*scale, 'LEVEL '+(level+1)+'!', '#ffd700');
                         addFloatText(W/2, H/2+15*scale, '+20分 | 护盾3秒', '#ffffff');
                         score += 20; scoreEl.textContent = score;
@@ -544,26 +549,59 @@
             }
         }
 
+        // 城市剪影建筑数据（预生成，每个建筑：x, w, h, 窗口列数）
+        var buildings = [];
+        function generateBuildings() {
+            buildings = [];
+            var bx = 0;
+            while (bx < W + 60) {
+                var bw = 18*scale + Math.random()*35*scale;
+                var bh = 25*scale + Math.random()*65*scale;
+                var wins = Math.floor(bw / (8*scale));
+                buildings.push({ x: bx, w: bw, h: bh, wins: wins });
+                bx += bw + 2*scale;
+            }
+        }
+
         function draw() {
             ctx.clearRect(0, 0, W, H);
 
-            var grad = ctx.createLinearGradient(0, 0, 0, H);
-            var intensity = Math.min(1, 0.15+level*0.06);
-            grad.addColorStop(0, '#1a1a2e');
-            grad.addColorStop(0.5, '#16213e');
-            grad.addColorStop(1, 'rgba(15,51,96,'+(1-intensity*0.3)+')');
-            ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+            // 夜空渐变
+            var skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+            var intensity = Math.min(1, 0.12+level*0.06);
+            skyGrad.addColorStop(0, '#0a0a1e');
+            skyGrad.addColorStop(0.35, '#12122e');
+            skyGrad.addColorStop(0.65, '#1a1a3a');
+            skyGrad.addColorStop(1, 'rgba(18,25,44,'+(1-intensity*0.25)+')');
+            ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, W, H);
 
-            ctx.fillStyle = 'white';
-            for (var i = 0; i < 30; i++) {
-                var sx = (i*137+50)%W, sy = (i*97+20)%(H*0.6);
-                ctx.globalAlpha = 0.3+(Math.sin(frame*0.02+i)+1)*0.35;
-                ctx.beginPath();
-                ctx.arc(sx, sy, (0.5+(i%3)*0.5)*scale, 0, Math.PI*2);
-                ctx.fill();
+            // 月亮
+            var mx = W - 55*scale, my = 40*scale, mr = 22*scale;
+            var moonGrad = ctx.createRadialGradient(mx-3*scale, my-3*scale, mr*0.1, mx, my, mr*1.3);
+            moonGrad.addColorStop(0, '#fffef0');
+            moonGrad.addColorStop(0.5, '#fef9d0');
+            moonGrad.addColorStop(1, 'rgba(254,240,180,0)');
+            ctx.fillStyle = moonGrad;
+            ctx.beginPath(); ctx.arc(mx, my, mr*1.3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#0a0a1e';
+            ctx.beginPath(); ctx.arc(mx+mr*0.25, my-mr*0.15, mr, 0, Math.PI*2); ctx.fill();
+
+            // 星星
+            ctx.fillStyle = '#fff';
+            for (var i = 0; i < 35; i++) {
+                var sx = (i*173+37)%W, sy = (i*89+13)%(H*0.55);
+                var twinkle = 0.25+(Math.sin(frame*0.015+i*2.7)+1)*0.4;
+                ctx.globalAlpha = twinkle;
+                var sr = (0.4+(i%3)*0.45)*scale;
+                ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
+                if (i < 5 && sr > 0.8*scale) {
+                    ctx.globalAlpha = twinkle*0.5;
+                    ctx.beginPath(); ctx.arc(sx, sy, sr*2.2, 0, Math.PI*2); ctx.fill();
+                }
             }
             ctx.globalAlpha = 1;
 
+            // 雨滴和闪电
             for (var d = 0; d < drops.length; d++) {
                 var drop = drops[d];
                 if (drop.type === 'lightning') {
@@ -580,18 +618,19 @@
                     ctx.closePath(); ctx.fill();
                     ctx.shadowBlur = 0;
                 } else {
-                    ctx.fillStyle = '#4dc9f6'; ctx.beginPath();
+                    ctx.fillStyle = '#5bb8f0'; ctx.beginPath();
                     var r = drop.r;
                     ctx.moveTo(drop.x, drop.y+r);
-                    ctx.arc(drop.x-r*0.6, drop.y, r*0.6, 0, Math.PI*2);
-                    ctx.arc(drop.x+r*0.6, drop.y, r*0.6, 0, Math.PI*2);
-                    ctx.moveTo(drop.x-r*0.5, drop.y-r*0.3);
-                    ctx.lineTo(drop.x, drop.y-r*1.3);
-                    ctx.lineTo(drop.x+r*0.5, drop.y-r*0.3);
+                    ctx.arc(drop.x-r*0.5, drop.y, r*0.5, 0, Math.PI*2);
+                    ctx.arc(drop.x+r*0.5, drop.y, r*0.5, 0, Math.PI*2);
+                    ctx.moveTo(drop.x-r*0.3, drop.y-r*0.2);
+                    ctx.lineTo(drop.x, drop.y-r*1.25);
+                    ctx.lineTo(drop.x+r*0.3, drop.y-r*0.2);
                     ctx.fill();
                 }
             }
 
+            // 粒子
             for (var p = 0; p < particles.length; p++) {
                 var pt = particles[p];
                 ctx.globalAlpha = pt.life/50; ctx.fillStyle = pt.color;
@@ -599,6 +638,7 @@
             }
             ctx.globalAlpha = 1;
 
+            // 浮动文字
             for (var f = 0; f < floatTexts.length; f++) {
                 var ft = floatTexts[f];
                 ctx.globalAlpha = Math.min(1, ft.life/40);
@@ -608,13 +648,47 @@
             }
             ctx.globalAlpha = 1;
 
+            // 升级闪光
             if (levelUpFlash > 0) {
                 ctx.fillStyle = 'rgba(255,215,0,'+(levelUpFlash/35*0.3)+')';
                 ctx.fillRect(0, 0, W, H);
             }
 
-            var ux = playerX, uy = H - playerH;
+            // === 地面 & 城市 ===
+            var groundY = H - 28*scale;
+            // 地面积水反光
+            var gndGrad = ctx.createLinearGradient(0, groundY, 0, H);
+            gndGrad.addColorStop(0, '#1a1e2e');
+            gndGrad.addColorStop(0.3, '#141824');
+            gndGrad.addColorStop(1, '#0c0f18');
+            ctx.fillStyle = gndGrad;
+            ctx.fillRect(0, groundY, W, H - groundY);
 
+            // 城市剪影
+            if (buildings.length === 0 || buildings[buildings.length-1].x > W + 60) generateBuildings();
+            ctx.fillStyle = '#0d1118';
+            for (var b = 0; b < buildings.length; b++) {
+                var bd = buildings[b];
+                if (bd.x + bd.w < 0 || bd.x > W) continue;
+                ctx.fillRect(bd.x, groundY - bd.h, bd.w, bd.h);
+                // 窗户灯光
+                if (bd.wins > 0 && bd.h > 25*scale) {
+                    for (var wi = 0; wi < bd.wins; wi++) {
+                        if (Math.random() < 0.55) {
+                            var wx = bd.x + 3*scale + wi*(bd.w/bd.wins);
+                            var wy = groundY - bd.h + 8*scale + (wi%2)*14*scale;
+                            ctx.fillStyle = (wi%3===0) ? '#ffe9a0' : '#fddc7a';
+                            ctx.globalAlpha = 0.5+Math.random()*0.4;
+                            ctx.fillRect(wx, wy, 2.5*scale, 3.5*scale);
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+                }
+            }
+            ctx.fillStyle = '#0d1118';
+
+            // 雨伞
+            var ux = playerX, uy = groundY - playerH + 10*scale;
             if (shieldFrames > 0) {
                 var sa = 0.25+Math.sin(frame*0.3)*0.15;
                 ctx.strokeStyle = 'rgba(255,215,0,'+sa+')'; ctx.lineWidth = 4*scale;
@@ -623,7 +697,6 @@
                 ctx.strokeStyle = 'rgba(255,255,255,'+(sa*0.5)+')';
                 ctx.beginPath(); ctx.arc(ux, uy+10*scale, 43*scale, 0, Math.PI*2); ctx.stroke();
             }
-
             ctx.fillStyle = '#e74c3c'; ctx.beginPath();
             ctx.arc(ux, uy+10*scale, 35*scale, Math.PI, 0); ctx.fill();
             ctx.fillStyle = '#f39c12'; ctx.beginPath();
@@ -632,35 +705,86 @@
             ctx.fillStyle = '#c0392b'; ctx.beginPath();
             ctx.arc(ux+12*scale, uy+10*scale, 35*scale, Math.PI-0.35, 0);
             ctx.lineTo(ux+10*scale, uy-2*scale); ctx.fill();
-
-            ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3*scale;
+            ctx.strokeStyle = '#5a2d0c'; ctx.lineWidth = 3*scale;
             ctx.beginPath(); ctx.moveTo(ux, uy+10*scale); ctx.lineTo(ux, uy+playerH); ctx.stroke();
             ctx.beginPath(); ctx.arc(ux+8*scale, uy+playerH-3*scale, 8*scale, Math.PI, 0); ctx.stroke();
 
-            ctx.fillStyle = 'rgba(255,255,255,0.85)';
-            ctx.font = 'bold ' + Math.floor(13*scale) + 'px sans-serif'; ctx.textAlign = 'left';
-            ctx.fillText('Lv.'+(level+1), 8*scale, 20*scale);
-            ctx.fillText('速度 '+getSpeed().toFixed(1)+'x', 8*scale, 38*scale);
+            // === HUD ===
+            var remain = (level+1)*100 - score;
+            // 顶部栏背景
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.beginPath();
+            var hudW = W - 16*scale, hudH = 44*scale, hudX = 8*scale, hudY = 8*scale;
+            ctx.moveTo(hudX+12*scale, hudY);
+            ctx.lineTo(hudX+hudW-12*scale, hudY);
+            ctx.quadraticCurveTo(hudX+hudW, hudY, hudX+hudW, hudY+12*scale);
+            ctx.lineTo(hudX+hudW, hudY+hudH-12*scale);
+            ctx.quadraticCurveTo(hudX+hudW, hudY+hudH, hudX+hudW-12*scale, hudY+hudH);
+            ctx.lineTo(hudX+12*scale, hudY+hudH);
+            ctx.quadraticCurveTo(hudX, hudY+hudH, hudX, hudY+hudH-12*scale);
+            ctx.lineTo(hudX, hudY+12*scale);
+            ctx.quadraticCurveTo(hudX, hudY, hudX+12*scale, hudY);
+            ctx.fill();
+
+            // LV 标签
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold ' + Math.floor(12*scale) + 'px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('Lv.'+(level+1), hudX+10*scale, hudY+18*scale);
+
+            // 进度条
+            var barX = hudX + 58*scale, barW = hudW - 120*scale, barH = 5*scale, barY = hudY + 13*scale;
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.beginPath();
+            ctx.moveTo(barX+barH, barY);
+            ctx.lineTo(barX+barW-barH, barY);
+            ctx.quadraticCurveTo(barX+barW, barY, barX+barW, barY+barH/2);
+            ctx.quadraticCurveTo(barX+barW, barY+barH, barX+barW-barH, barY+barH);
+            ctx.lineTo(barX+barH, barY+barH);
+            ctx.quadraticCurveTo(barX, barY+barH, barX, barY+barH/2);
+            ctx.quadraticCurveTo(barX, barY, barX+barH, barY);
+            ctx.fill();
+            var progress = Math.min(1, (score % 100) / 100);
+            if (progress > 0) {
+                var pgGrad = ctx.createLinearGradient(barX, 0, barX+barW*progress, 0);
+                pgGrad.addColorStop(0, '#667eea');
+                pgGrad.addColorStop(1, '#a29bfe');
+                ctx.fillStyle = pgGrad;
+                var fillW = Math.max(barH*2, barW*progress);
+                ctx.beginPath();
+                ctx.moveTo(barX+barH, barY);
+                ctx.lineTo(barX+fillW-barH, barY);
+                ctx.quadraticCurveTo(barX+fillW, barY, barX+fillW, barY+barH/2);
+                ctx.quadraticCurveTo(barX+fillW, barY+barH, barX+fillW-barH, barY+barH);
+                ctx.lineTo(barX+barH, barY+barH);
+                ctx.quadraticCurveTo(barX, barY+barH, barX, barY+barH/2);
+                ctx.quadraticCurveTo(barX, barY, barX+barH, barY);
+                ctx.fill();
+            }
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.font = Math.floor(9*scale) + 'px sans-serif';
+            ctx.fillText(remain+' 分升级', barX+barW+5*scale, hudY+18*scale);
+
+            // 护盾
             if (shieldFrames > 0) {
                 ctx.fillStyle = '#ffd700';
-                ctx.fillText('护盾 '+Math.ceil(shieldFrames/30)+'s', W-85*scale, 20*scale);
+                ctx.fillText('🛡 '+Math.ceil(shieldFrames/30)+'s', W-60*scale, hudY+18*scale);
             }
-            var remain = (level+1)*100 - score;
-            ctx.fillStyle = 'rgba(255,255,255,0.55)';
-            ctx.font = Math.floor(11*scale)+'px sans-serif'; ctx.textAlign = 'right';
-            ctx.fillText('距升级差 '+remain+' 分', W-8*scale, 38*scale); ctx.textAlign = 'start';
 
+            // Game Over
             if (gameOver) {
-                ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(0, 0, W, H);
+                ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0, 0, W, H);
                 ctx.fillStyle = '#fff'; ctx.font = 'bold '+Math.floor(28*scale)+'px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('游戏结束', W/2, H/2-12*scale);
+                ctx.fillText('游戏结束', W/2, H/2-15*scale);
                 ctx.font = Math.floor(14*scale)+'px sans-serif';
                 ctx.fillText('得分: '+score+'  Lv.'+(level+1), W/2, H/2+18*scale);
-                ctx.fillText('点击重来', W/2, H/2+42*scale);
+                ctx.fillText('点击重来', W/2, H/2+45*scale);
                 ctx.textAlign = 'start';
             }
         }
+
+        generateBuildings();
 
         function loop() { update(); draw(); requestAnimationFrame(loop); }
         loop();
