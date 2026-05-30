@@ -1,19 +1,8 @@
 // 厦门天气 Service Worker
-var CACHE_NAME = 'xiamen-weather-v1';
-var STATIC_ASSETS = [
-  '.',
-  'index.html',
-  'manifest.json',
-  'icon.svg'
-];
+var CACHE_NAME = 'xiamen-weather-v2';
 
-// 安装：缓存静态资源
+// 安装
 self.addEventListener('install', function(e) {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
   self.skipWaiting();
 });
 
@@ -30,18 +19,16 @@ self.addEventListener('activate', function(e) {
   self.clients.claim();
 });
 
-// 请求拦截：静态资源走缓存，API 走网络
+// 请求拦截
 self.addEventListener('fetch', function(e) {
   var url = new URL(e.request.url);
 
-  // 天气 API 请求：网络优先，失败用缓存
+  // 天气 API：网络优先，失败用缓存
   if (url.hostname === 'api.open-meteo.com') {
     e.respondWith(
       fetch(e.request).then(function(resp) {
         var clone = resp.clone();
-        caches.open(CACHE_NAME).then(function(cache) {
-          cache.put(e.request, clone);
-        });
+        caches.open(CACHE_NAME).then(function(cache) { cache.put(e.request, clone); });
         return resp;
       }).catch(function() {
         return caches.match(e.request);
@@ -50,14 +37,26 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // 静态资源：缓存优先
+  // HTML 页面：网络优先（确保实时更新），失败用缓存
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then(function(resp) {
+        var clone = resp.clone();
+        caches.open(CACHE_NAME).then(function(cache) { cache.put(e.request, clone); });
+        return resp;
+      }).catch(function() {
+        return caches.match(e.request);
+      })
+    );
+    return;
+  }
+
+  // 其他静态资源：缓存优先
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       return cached || fetch(e.request).then(function(resp) {
         var clone = resp.clone();
-        caches.open(CACHE_NAME).then(function(cache) {
-          cache.put(e.request, clone);
-        });
+        caches.open(CACHE_NAME).then(function(cache) { cache.put(e.request, clone); });
         return resp;
       });
     })
