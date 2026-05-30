@@ -134,7 +134,7 @@
     <canvas id="bgCanvas"></canvas>
     <div class="container">
         <header>
-            <h1>厦门天气 <span style="font-size:8px;color:rgba(255,255,255,0.4);vertical-align:super;">v19</span></h1>
+            <h1>厦门天气 <span style="font-size:8px;color:rgba(255,255,255,0.4);vertical-align:super;">v20</span></h1>
             <span class="date" id="updateTime"></span>
         </header>
 
@@ -726,10 +726,10 @@
             var shirtR = '#e74c3c';
             var shortsY = '#f5c842';
 
-            // 鞋
+            // 鞋（用arc+scale模拟椭圆，兼容所有浏览器）
             ctx.fillStyle = '#f0d050';
-            ctx.beginPath(); ctx.ellipse(sx-5*scale, groundY-1*scale, 5*scale, 2.8*scale, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(sx+5*scale, groundY-1*scale, 5*scale, 2.8*scale, 0, 0, Math.PI*2); ctx.fill();
+            ctx.save(); ctx.translate(sx-5*scale, groundY-1*scale); ctx.scale(1, 0.55); ctx.beginPath(); ctx.arc(0, 0, 5*scale, 0, Math.PI*2); ctx.fill(); ctx.restore();
+            ctx.save(); ctx.translate(sx+5*scale, groundY-1*scale); ctx.scale(1, 0.55); ctx.beginPath(); ctx.arc(0, 0, 5*scale, 0, Math.PI*2); ctx.fill(); ctx.restore();
             // 袜子白边
             ctx.fillStyle = '#fff';
             ctx.fillRect(sx-7*scale, groundY-6*scale, 6*scale, 2*scale);
