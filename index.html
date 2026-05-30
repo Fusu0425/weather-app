@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>厦门天气</title>
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="厦门天气">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 16px;
+        }
+        #bgCanvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+        .container { position:relative; z-index:1; }
+        .container { max-width: 520px; margin:0 auto; }
+        header { text-align:center; color:white; margin-bottom:16px; }
+        header h1 { font-size:1.6rem; letter-spacing:2px; }
+        header .date { font-size:0.8rem; opacity:0.75; }
+        .current-card {
+            background: rgba(255,255,255,0.95); border-radius:16px;
+            padding:20px 16px; text-align:center; margin-bottom:20px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+        }
+        .current-main { display:flex; align-items:center; justify-content:center; gap:10px; }
+        .current-icon { font-size:2rem; }
+        .current-temp { font-size:2rem; font-weight:700; color:#333; }
+        .current-temp sup { font-size:0.9rem; }
+        .current-desc { font-size:1rem; color:#666; margin-bottom:14px; }
+        .current-details { display:flex; justify-content:center; gap:36px; }
+        .detail { display:flex; flex-direction:column; }
+        .detail-label { font-size:0.78rem; color:#999; }
+        .detail-value { font-size:1rem; font-weight:600; color:#555; }
+        h2 { color:white; margin-bottom:12px; font-size:1.15rem; text-align:center; }
+        .forecast-grid {
+            display:flex; gap:8px; overflow-x:auto; padding-bottom:8px;
+            -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory;
+        }
+        .forecast-card {
+            flex:0 0 100px; background: rgba(255,255,255,0.92);
+            border-radius:12px; padding:12px 8px; text-align:center;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08); scroll-snap-align:start;
+        }
+        .forecast-date { font-size:0.75rem; color:#888; margin-bottom:6px; }
+        .forecast-icon { font-size:1.6rem; margin-bottom:2px; }
+        .forecast-desc { font-size:0.75rem; color:#666; margin-bottom:6px; }
+        .forecast-temps { display:flex; justify-content:center; gap:6px; margin-bottom:4px; }
+        .temp-high { font-weight:700; color:#e74c3c; font-size:11px !important; }
+        .temp-low { color:#3498db; font-size:11px !important; }
+        .forecast-rain { font-size:0.72rem; color:#888; }
+        .hourly-section { margin-bottom:20px; }
+        .hourly-section h2 { color:#fff; font-size:1.05rem; margin-bottom:10px; text-align:center; }
+        .hourly-nav { display:flex; align-items:center; gap:6px; }
+        .nav-cloud {
+            flex:0 0 42px; height:38px;
+            border:none; cursor:pointer;
+            background:transparent; padding:0;
+            filter:drop-shadow(0 2px 6px rgba(0,0,0,0.1));
+            transition:transform 0.15s, filter 0.2s, opacity 0.2s;
+            -webkit-tap-highlight-color:transparent;
+            user-select:none; outline:none;
+        }
+        .nav-cloud:active { transform:scale(0.85); }
+        .nav-cloud:disabled { filter:drop-shadow(0 1px 3px rgba(0,0,0,0.06)); opacity:0.3; pointer-events:none; }
+        .hourly-strip {
+            flex:1; background:rgba(255,255,255,0.92);
+            border-radius:14px; padding:14px 6px;
+            display:flex; gap:0; overflow-x:hidden;
+            scroll-behavior:smooth;
+            box-shadow:0 2px 16px rgba(0,0,0,0.07);
+        }
+        .hourly-item {
+            flex:0 0 50px; text-align:center;
+            border-right:1px solid rgba(0,0,0,0.07);
+            padding:2px 0;
+        }
+        .hourly-item:first-child { padding-left:2px; }
+        .hourly-item:last-child { border-right:none; padding-right:2px; }
+        .hourly-time { font-size:10px; color:#999; margin-bottom:6px; }
+        .hourly-icon { font-size:1.25rem; margin-bottom:6px; line-height:1; }
+        .hourly-temp { font-size:11px; font-weight:600; color:#333; }
+        .error-card {
+            background: rgba(255,255,255,0.95); border-radius:16px;
+            padding:40px 24px; text-align:center;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+        }
+        .error-card h2 { color:#e74c3c; }
+        .error-card p { color:#888; font-size:0.9rem; }
+        .loading { text-align:center; color:white; padding:40px; }
+        .loading span { font-size:2rem; }
+        .game-section { margin-top:24px; }
+        .game-section h2 { color:#fff; font-size:1.15rem; margin-bottom:4px; }
+        .game-hint { color: rgba(255,255,255,0.7); font-size:0.8rem; margin-bottom:10px; text-align:center; }
+        .game-wrapper {
+            background: rgba(255,255,255,0.95); border-radius:16px;
+            padding:16px 12px; text-align:center;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+        }
+        #gameCanvas {
+            border-radius:10px; display:block; margin:0 auto 10px;
+            max-width:100%; height:auto; touch-action:none;
+        }
+        .game-controls { display:flex; align-items:center; justify-content:center; gap:20px; }
+        .game-score { font-size:1rem; color:#333; }
+        .game-score strong { color:#667eea; font-size:1.2rem; }
+        .game-btn {
+            padding:10px 28px; border:none; border-radius:22px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color:white; font-size:1rem; cursor:pointer;
+            -webkit-tap-highlight-color:transparent; user-select:none;
+        }
+        .game-btn:active { transform:scale(0.95); }
+        .app-footer {
+            text-align:center; color:rgba(255,255,255,0.5);
+            font-size:0.72rem; margin-top:24px; padding-bottom:16px;
+        }
+        @media (min-width:640px) {
+            body { padding:24px; }
+            .container { max-width:700px; }
+            header h1 { font-size:2rem; }
+            .current-icon { font-size:3rem; }
+            .current-temp { font-size:2.6rem; }
+            .forecast-card { flex:0 0 110px; }
+            .forecast-icon { font-size:2rem; }
+            .hourly-item { flex:0 0 62px; }
+            .hourly-icon { font-size:1.35rem; }
+        }
+        @media (min-width:800px) {
+            .forecast-grid { overflow-x:visible; display:grid; grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); }
+            .hourly-strip { overflow-x:visible; display:grid; grid-template-columns:repeat(auto-fit,minmax(55px,1fr)); gap:0; }
+            .hourly-item { flex:unset; }
+            .hourly-item:last-child { border-right:none; }
+            .forecast-card { flex:unset; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bgCanvas"></canvas>
+    <div class="container">
+        <header>
+            <h1>厦门天气 <span style="font-size:8px;color:rgba(255,255,255,0.4);vertical-align:super;">v14</span></h1>
+            <span class="date" id="updateTime"></span>
+        </header>
+
+        <div id="weatherContent" class="loading">
+            <span>⏳</span>
+            <p style="color:rgba(255,255,255,0.7);margin-top:12px;">加载中...</p>
+        </div>
+
+        <div class="game-section">
+            <h2>接雨滴</h2>
+            <p class="game-hint">移动雨伞接住 💧 雨滴，躲开 ⚡ 闪电</p>
+            <div class="game-wrapper">
+                <canvas id="gameCanvas"></canvas>
+                <div class="game-controls">
+                    <span class="game-score">得分 <strong id="score">0</strong></span>
+                    <button class="game-btn" id="restartBtn">重来</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-footer">厦门天气 · 数据来源 Open-Meteo · <span id="refreshHint"></span></div>
+    </div>
+
+    <script>
+    // ========== 天气模块 ==========
+    var WEATHER_CODES = {
+        0:["晴","☀️"],1:["少云","🌤️"],2:["多云","⛅"],3:["阴","☁️"],
+        45:["雾","🌫️"],48:["雾凇","🌫️"],51:["小毛毛雨","🌦️"],53:["毛毛雨","🌦️"],
+        55:["大毛毛雨","🌧️"],61:["小雨","🌧️"],63:["中雨","🌧️"],65:["大雨","🌧️"],
+        71:["小雪","🌨️"],73:["中雪","🌨️"],75:["大雪","❄️"],77:["雪粒","❄️"],
+        80:["阵雨","🌦️"],81:["中阵雨","🌧️"],82:["大阵雨","🌧️"],
+        85:["小阵雪","🌨️"],86:["大阵雪","🌨️"],95:["雷暴","⛈️"],
+        96:["冰雹雷暴","⛈️"],99:["大冰雹雷暴","⛈️"]
+    };
+
+    function formatDate(d) {
+        var y = d.getFullYear();
+        var m = d.getMonth() + 1;
+        var day = d.getDate();
+        var h = d.getHours();
+        var min = d.getMinutes();
+        return y + '年' + (m<10?'0':'')+m + '月' + (day<10?'0':'')+day + '日 ' + (h<10?'0':'')+h + ':' + (min<10?'0':'')+min + ' 更新';
+    }
+
+    function fetchWeather() {
+        var url = 'https://api.open-meteo.com/v1/forecast?latitude=24.48&longitude=118.09&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=temperature_2m,weather_code&timezone=Asia/Shanghai&forecast_days=7&forecast_hours=24';
+
+        fetch(url)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                document.getElementById('updateTime').textContent = formatDate(new Date());
+                window.setBgEffect && window.setBgEffect(data.current.weather_code);
+
+                var current = data.current;
+                var cd = WEATHER_CODES[current.weather_code] || ["未知","❓"];
+                var daily = data.daily;
+                var daysHtml = '';
+                for (var i = 0; i < daily.time.length; i++) {
+                    var dd = WEATHER_CODES[daily.weather_code[i]] || ["未知","❓"];
+                    var date = daily.time[i];
+                    var shortDate = date.slice(5).replace(/-/g, '/');
+                    daysHtml += '<div class="forecast-card">'
+                        + '<div class="forecast-date">' + shortDate + '</div>'
+                        + '<div class="forecast-icon">' + dd[1] + '</div>'
+                        + '<div class="forecast-desc">' + dd[0] + '</div>'
+                        + '<div class="forecast-temps">'
+                        + '<span class="temp-high">' + daily.temperature_2m_max[i] + '°</span>'
+                        + '<span class="temp-low">' + daily.temperature_2m_min[i] + '°</span>'
+                        + '</div>'
+                        + '<div class="forecast-rain">雨 ' + daily.precipitation_probability_max[i] + '%</div>'
+                        + '</div>';
+                }
+
+                var hourly = data.hourly;
+                var hourlyHtml = '';
+                var hLen = Math.min(hourly.time.length, 24);
+                for (var i = 0; i < hLen; i++) {
+                    var hc = WEATHER_CODES[hourly.weather_code[i]] || ["未知","❓"];
+                    var hTime = hourly.time[i].split('T')[1];
+                    var hHour = hTime.split(':')[0];
+                    var borderStyle = (i === hLen - 1) ? 'border-right:none;' : 'border-right:1px solid rgba(0,0,0,0.07);';
+                    hourlyHtml += '<div class="hourly-item" style="flex:0 0 50px;text-align:center;' + borderStyle + 'padding:2px 0;">'
+                        + '<div class="hourly-time" style="font-size:10px;color:#999;margin-bottom:6px;">' + hHour + '</div>'
+                        + '<div class="hourly-icon" style="font-size:1.25rem;margin-bottom:6px;line-height:1;">' + hc[1] + '</div>'
+                        + '<div class="hourly-temp" style="font-size:11px;font-weight:600;color:#333;">' + Math.round(hourly.temperature_2m[i]) + '°</div>'
+                        + '</div>';
+                }
+
+                document.getElementById('weatherContent').innerHTML =
+                    '<div class="current-card">'
+                    + '<div class="current-main">'
+                    + '<span class="current-icon">' + cd[1] + '</span>'
+                    + '<span class="current-temp">' + current.temperature_2m + '<sup>°C</sup></span>'
+                    + '</div>'
+                    + '<div class="current-desc">' + cd[0] + '</div>'
+                    + '<div class="current-details">'
+                    + '<div class="detail"><span class="detail-label">湿度</span><span class="detail-value">' + current.relative_humidity_2m + '%</span></div>'
+                    + '<div class="detail"><span class="detail-label">风速</span><span class="detail-value">' + current.wind_speed_10m + ' km/h</span></div>'
+                    + '</div></div>'
+                    + '<div class="hourly-section"><h2>未来 24 小时</h2>'
+                    + '<div class="hourly-nav">'
+                    + '<button class="nav-cloud nav-left" onclick="shiftHourly(-1)" disabled>'
+                    + '<svg width="38" height="32" viewBox="0 0 38 32"><g><circle cx="9" cy="15" r="7.5" fill="#fff"/><circle cx="18" cy="11" r="9.5" fill="#fff"/><circle cx="26" cy="14" r="7" fill="#fff"/><rect x="3" y="12" width="28" height="11" rx="5.5" fill="#fff"/></g><polyline points="18,8 13,14 18,20" stroke="#6c5ce7" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                    + '</button>'
+                    + '<div class="hourly-strip" style="background:rgba(255,255,255,0.92)!important;border-radius:14px!important;padding:14px 6px!important;display:flex!important;gap:0!important;overflow-x:hidden!important;scroll-behavior:smooth!important;box-shadow:0 2px 16px rgba(0,0,0,0.07)!important;">' + hourlyHtml + '</div>'
+                    + '<button class="nav-cloud nav-right" onclick="shiftHourly(1)">'
+                    + '<svg width="38" height="32" viewBox="0 0 38 32"><g><circle cx="9" cy="15" r="7.5" fill="#fff"/><circle cx="18" cy="11" r="9.5" fill="#fff"/><circle cx="26" cy="14" r="7" fill="#fff"/><rect x="3" y="12" width="28" height="11" rx="5.5" fill="#fff"/></g><polyline points="16,8 21,14 16,20" stroke="#6c5ce7" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                    + '</button>'
+                    + '</div></div>'
+                    + '<h2>未来 7 天</h2>'
+                    + '<div class="forecast-grid">' + daysHtml + '</div>';
+            })
+            .catch(function(err) {
+                document.getElementById('weatherContent').innerHTML =
+                    '<div class="error-card"><h2>获取失败</h2><p>' + err.message + '</p></div>';
+            });
+    }
+
+    fetchWeather();
+
+    // ========== 小时预报翻页 ==========
+    var HOURLY_ITEM_W = 50;
+    var HOURLY_PER_PAGE = 8;
+    window.shiftHourly = function(dir) {
+        var strip = document.querySelector('.hourly-strip');
+        var leftBtn = document.querySelector('.nav-left');
+        var rightBtn = document.querySelector('.nav-right');
+        if (!strip) return;
+        var maxScroll = strip.scrollWidth - strip.clientWidth;
+        var target = Math.max(0, Math.min(maxScroll, strip.scrollLeft + dir * HOURLY_PER_PAGE * HOURLY_ITEM_W));
+        strip.scrollTo({left: target, behavior: 'smooth'});
+        setTimeout(function() {
+            if (leftBtn) leftBtn.disabled = strip.scrollLeft <= 2;
+            if (rightBtn) rightBtn.disabled = strip.scrollLeft >= maxScroll - 2;
+        }, 350);
+    };
+
+    // ========== 背景特效模块 ==========
+    (function() {
+        var canvas = document.getElementById('bgCanvas');
+        var ctx = canvas.getContext('2d');
+        var W, H, particles = [], clouds = [], effect = 'clear', flashAlpha = 0, frame = 0, bgThrottle = 0;
+        function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        var rainCfg = {
+            'drizzle':      { rate:2, vMin:4, vMax:8,  wMin:-0.5, wMax:-1.5, sMin:0.3, sMax:0.7, lMin:6,  lMax:10, color:'#bedaf0', splash:false },
+            'rain-light':   { rate:4, vMin:8, vMax:13, wMin:-1,   wMax:-2.5, sMin:0.5, sMax:1.2, lMin:10, lMax:16, color:'#a8cff0', splash:false },
+            'rain-medium':  { rate:6, vMin:13,vMax:19, wMin:-1.5, wMax:-3.5, sMin:0.8, sMax:2.0, lMin:15, lMax:24, color:'#8abae8', splash:true  },
+            'rain-heavy':   { rate:9, vMin:18,vMax:28, wMin:-2,   wMax:-5,   sMin:1.2, sMax:3.0, lMin:20, lMax:32, color:'#7aade0', splash:true  },
+            'thunderstorm': { rate:10,vMin:16,vMax:26, wMin:-2,   wMax:-5,   sMin:1.0, sMax:2.8, lMin:18, lMax:30, color:'#7aade0', splash:true  }
+        };
+        var rainBg = [ ['#2c3e50','#3d566e','#4a6a8a'], ['#1e3040','#2d4660','#3a5a7a'], ['#141e2e','#1e2e44','#283a58'], ['#0d1520','#152238','#1e2e48'] ];
+
+        function spawn() {
+            var cfg;
+            switch(effect) {
+                case 'drizzle': case 'rain-light': case 'rain-medium': case 'rain-heavy': case 'thunderstorm':
+                    cfg = rainCfg[effect];
+                    particles.push({ x:Math.random()*W*1.35-W*0.15, y:-30, vx:cfg.wMin+Math.random()*(cfg.wMax-cfg.wMin), vy:cfg.vMin+Math.random()*(cfg.vMax-cfg.vMin), life:60+Math.random()*100, size:cfg.sMin+Math.random()*(cfg.sMax-cfg.sMin), len:Math.floor(cfg.lMin+Math.random()*(cfg.lMax-cfg.lMin)), type:'drop', color:cfg.color, splash:cfg.splash });
+                    break;
+                case 'clear':
+                    if (Math.random() < 0.5) particles.push({ x:Math.random()*W, y:H+20, vx:(Math.random()-0.5)*0.4, vy:-1-Math.random()*2.5, life:150+Math.random()*250, size:3+Math.random()*6, type:'mote', color:Math.random()<0.5?'#ffd700':'#ffeaa7' });
+                    break;
+                case 'snow':
+                    particles.push({ x:Math.random()*W, y:-10, vx:(Math.random()-0.5)*0.6, vy:1+Math.random()*2, life:300+Math.random()*400, size:2.5+Math.random()*4.5, type:'snow', sway:Math.random()*Math.PI*2, swSp:0.008+Math.random()*0.025, swAmp:0.5+Math.random()*2 });
+                    break;
+                case 'fog':
+                    if (Math.random() < 0.25) particles.push({ x:W+50, y:Math.random()*H*0.7, vx:-0.3-Math.random()*0.5, vy:(Math.random()-0.5)*0.2, life:400+Math.random()*400, size:80+Math.random()*140, type:'fog', alpha:0.025+Math.random()*0.05 });
+                    break;
+            }
+        }
+
+        function initClouds() {
+            clouds = [];
+            for (var i = 0; i < 10; i++) {
+                var n = 5 + Math.floor(Math.random() * 8), segs = [], baseR = 30 + Math.random() * 60;
+                for (var j = 0; j < n; j++) {
+                    segs.push({
+                        ox: (Math.random()-0.5)*baseR*2.2,
+                        oy: (Math.random()-0.5)*baseR*0.6 - j*2,
+                        r: baseR*(0.4+Math.random()*0.9)
+                    });
+                }
+                clouds.push({
+                    x: Math.random()*W, y: Math.random()*H*0.5,
+                    vx: -0.2-Math.random()*0.45,
+                    segs: segs, alpha: 0.55+Math.random()*0.4,
+                    shadowY: 4 + Math.random()*8
+                });
+            }
+        }
+
+        window.setBgEffect = function(code) {
+            var map = { 0:'clear', 1:'cloudy', 2:'cloudy', 3:'cloudy', 45:'fog', 48:'fog', 51:'drizzle',53:'drizzle',55:'rain-light', 61:'rain-light',63:'rain-medium',65:'rain-heavy', 71:'snow',73:'snow',75:'snow',77:'snow', 80:'rain-light',81:'rain-medium',82:'rain-heavy', 85:'snow',86:'snow', 95:'thunderstorm',96:'thunderstorm',99:'thunderstorm' };
+            var next = map[code] || 'clear';
+            if (next !== effect) { effect = next; particles = []; if (effect === 'cloudy') initClouds(); }
+        };
+
+        function splashAt(x, y) {
+            for (var i = 0; i < 3; i++) {
+                particles.push({ x:x, y:y, vx:(Math.random()-0.5)*4, vy:-3-Math.random()*6, life:8+Math.random()*14, size:1+Math.random()*2.2, type:'splash' });
+            }
+        }
+
+        var rates = { drizzle:2, 'rain-light':4, 'rain-medium':6, 'rain-heavy':9, thunderstorm:10, clear:1, snow:2, fog:1, cloudy:0 };
+
+        function update() {
+            frame++;
+            for (var i = 0; i < (rates[effect]||1); i++) spawn();
+            for (var i = particles.length-1; i >= 0; i--) {
+                var p = particles[i];
+                p.life--;
+                if (p.life <= 0) { particles.splice(i,1); continue; }
+                if (p.type === 'drop') {
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.y > H + 30) { particles.splice(i,1); continue; }
+                    if (p.splash && p.y > H * 0.78 && Math.random() < 0.18) splashAt(p.x, p.y);
+                }
+                else if (p.type === 'splash') { p.x += p.vx; p.y += p.vy; p.vy += 0.35; }
+                else if (p.type === 'mote') { p.x += p.vx; p.y += p.vy; }
+                else if (p.type === 'snow') { p.sway += p.swSp; p.x += p.vx + Math.sin(p.sway)*p.swAmp; p.y += p.vy; if (p.y > H+20) particles.splice(i,1); }
+                else if (p.type === 'fog') { p.x += p.vx; p.y += p.vy + Math.sin(frame*0.005+p.x*0.01)*0.15; if (p.x < -250) particles.splice(i,1); }
+            }
+            if (effect === 'cloudy') {
+                for (var i = 0; i < clouds.length; i++) {
+                    clouds[i].x += clouds[i].vx;
+                    if (clouds[i].x < -350) { clouds[i].x = W + 100 + Math.random()*200; clouds[i].y = Math.random()*H*0.65; }
+                }
+            }
+            if (effect === 'thunderstorm') {
+                if (flashAlpha > 0) flashAlpha -= 0.05;
+                if (Math.random() < 0.006) flashAlpha = 0.25 + Math.random() * 0.55;
+            }
+        }
+
+        function drawCloud(cx, cy, segs, alpha, shadowY) {
+            // 底部阴影
+            ctx.globalAlpha = alpha * 0.35;
+            ctx.fillStyle = '#8fa4b8';
+            for (var i = 0; i < segs.length; i++) {
+                ctx.beginPath();
+                ctx.arc(cx+segs[i].ox+3, cy+segs[i].oy+shadowY, segs[i].r*0.9, 0, Math.PI*2);
+                ctx.fill();
+            }
+            // 主体白色
+            ctx.globalAlpha = alpha;
+            var grad = ctx.createRadialGradient(cx, cy-30, 10, cx, cy+20, 100);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.7, '#f0f4f8');
+            grad.addColorStop(1, '#dce4ec');
+            for (var i = 0; i < segs.length; i++) {
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(cx+segs[i].ox, cy+segs[i].oy, segs[i].r, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+            var grad = ctx.createLinearGradient(0, 0, 0, H), palettes = {
+                clear: ['#1a4a7a','#2d7ab8','#5bafe0'],
+                cloudy: ['#4a6274','#7b8fa1','#b0bec5'],
+                drizzle: rainBg[0], 'rain-light': rainBg[1], 'rain-medium': rainBg[2], 'rain-heavy': rainBg[3], thunderstorm: rainBg[3],
+                snow: ['#c8d6e5','#dfe6e9','#b2bec3'],
+                fog: ['#a4b0be','#ced6e0','#dfe4ea']
+            };
+            var p = palettes[effect] || palettes.clear;
+            grad.addColorStop(0, p[0]); grad.addColorStop(0.5, p[1]); grad.addColorStop(1, p[2]);
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+
+            if (effect === 'clear') {
+                var sx = W * 0.78, sy = H * 0.18, sr = Math.min(W, H) * 0.14;
+                var sg = ctx.createRadialGradient(sx, sy, sr*0.3, sx, sy, sr*1.8);
+                sg.addColorStop(0, 'rgba(255,240,200,0.95)'); sg.addColorStop(0.4, 'rgba(255,200,80,0.5)');
+                sg.addColorStop(0.7, 'rgba(255,150,30,0.1)'); sg.addColorStop(1, 'rgba(255,100,0,0)');
+                ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sx, sy, sr*1.8, 0, Math.PI*2); ctx.fill();
+            }
+            if (effect === 'cloudy') for (var i = 0; i < clouds.length; i++) drawCloud(clouds[i].x, clouds[i].y, clouds[i].segs, clouds[i].alpha, clouds[i].shadowY);
+            for (var i = 0; i < particles.length; i++) {
+                var pt = particles[i], alpha = Math.min(1, pt.life / 50);
+                ctx.globalAlpha = alpha;
+                if (pt.type === 'drop') {
+                    ctx.strokeStyle = pt.color; ctx.lineWidth = pt.size;
+                    ctx.beginPath(); ctx.moveTo(pt.x, pt.y); ctx.lineTo(pt.x - pt.vx * 3, pt.y - pt.len); ctx.stroke();
+                }
+                else if (pt.type === 'splash') { ctx.fillStyle = '#c0dff8'; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI*2); ctx.fill(); }
+                else if (pt.type === 'mote') { ctx.fillStyle = pt.color; ctx.shadowColor = pt.color; ctx.shadowBlur = pt.size*5; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; }
+                else if (pt.type === 'snow') { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI*2); ctx.fill(); }
+                else if (pt.type === 'fog') { ctx.fillStyle = 'rgba(255,255,255,'+pt.alpha+')'; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI*2); ctx.fill(); }
+            }
+            ctx.globalAlpha = 1;
+            if (flashAlpha > 0) { ctx.fillStyle = 'rgba(255,255,255,'+flashAlpha+')'; ctx.fillRect(0, 0, W, H); }
+        }
+
+        function loop() { bgThrottle++; if (bgThrottle % 2 === 0) update(); draw(); requestAnimationFrame(loop); }
+        initClouds();
+        loop();
+    })();
+
+    // ========== 游戏模块 ==========
+    (function() {
+        var canvas = document.getElementById('gameCanvas');
+        var ctx = canvas.getContext('2d');
+        var scoreEl = document.getElementById('score');
+
+        var BASE_W = 400, BASE_H = 450;
+        var W = BASE_W, H = BASE_H, scale = 1;
+
+        function resizeCanvas() {
+            var maxW = Math.min(canvas.parentElement.clientWidth - 24, 400);
+            scale = maxW / BASE_W;
+            W = maxW;
+            H = Math.floor(BASE_H * scale);
+            canvas.width = W;
+            canvas.height = H;
+            canvas.style.width = maxW + 'px';
+            canvas.style.height = H + 'px';
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        var playerX = W / 2;
+        var playerH = 50 * scale;
+        var score = 0, level = 0, gameOver = false, frame = 0;
+        var shieldFrames = 0, levelUpFlash = 0;
+        var drops = [], particles = [], floatTexts = [];
+
+        function getSpeed() { return 0.55 + level * 0.22; }
+        function getSpawnRate() { return Math.max(18, 55 - level * 6); }
+        function getLightningChance() { return Math.min(0.28, 0.04 + level * 0.03); }
+
+        function spawnDrop() {
+            var s = getSpeed();
+            var isLightning = Math.random() < getLightningChance();
+            return {
+                x: Math.random() * (W - 30) + 15, y: -20,
+                r: (isLightning ? 8 : 6) * scale,
+                type: isLightning ? 'lightning' : 'rain',
+                speed: (isLightning ? s * 1.4 : s * (0.6 + Math.random() * 0.7)) * scale
+            };
+        }
+
+        function addParticles(x, y, color, count) {
+            for (var i = 0; i < count; i++) {
+                var angle = Math.random() * Math.PI * 2;
+                var vel = (1.5 + Math.random() * 4) * scale;
+                particles.push({
+                    x:x, y:y, vx:Math.cos(angle)*vel, vy:Math.sin(angle)*vel - 2*scale,
+                    life:30+Math.random()*20, color:color, r:(1.5+Math.random()*2.5)*scale
+                });
+            }
+        }
+
+        function addFloatText(x, y, text, color) {
+            floatTexts.push({ x:x, y:y, text:text, color:color, life:100, vy:-0.8*scale });
+        }
+
+        function reset() {
+            resizeCanvas();
+            playerX = W/2; playerH = 50*scale;
+            score = 0; level = 0; gameOver = false; frame = 0;
+            shieldFrames = 0; levelUpFlash = 0;
+            drops = []; particles = []; floatTexts = [];
+            scoreEl.textContent = '0';
+        }
+
+        function getPos(e) {
+            var rect = canvas.getBoundingClientRect();
+            var cx = e.touches ? e.touches[0].clientX : e.clientX;
+            return (cx - rect.left) * (W / rect.width);
+        }
+
+        canvas.addEventListener('mousemove', function(e) { if(!gameOver) playerX = getPos(e); });
+        canvas.addEventListener('touchmove', function(e) { if(!gameOver){ e.preventDefault(); playerX = getPos(e); } }, {passive:false});
+        canvas.addEventListener('touchstart', function(e) { if(!gameOver){ e.preventDefault(); playerX = getPos(e); } }, {passive:false});
+        document.getElementById('restartBtn').addEventListener('click', reset);
+        canvas.addEventListener('click', function() { if(gameOver) reset(); });
+
+        function update() {
+            if (gameOver) return;
+            frame++;
+            if (shieldFrames > 0) shieldFrames--;
+            if (levelUpFlash > 0) levelUpFlash--;
+
+            if (frame % getSpawnRate() === 0) drops.push(spawnDrop());
+
+            var cleared = false;
+            for (var i = drops.length - 1; i >= 0; i--) {
+                if (cleared) break;
+                drops[i].y += drops[i].speed;
+                if (drops[i].y > H + 25*scale) { drops.splice(i,1); continue; }
+
+                var dx = drops[i].x - playerX;
+                var dy = drops[i].y - (H - playerH - 5*scale);
+                var dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < drops[i].r + 32*scale) {
+                    if (drops[i].type === 'lightning') {
+                        if (shieldFrames > 0) {
+                            addParticles(drops[i].x, drops[i].y, '#ffdd00', 20);
+                            addFloatText(drops[i].x, drops[i].y, '格挡!', '#ffdd00');
+                            drops.splice(i,1); continue;
+                        }
+                        gameOver = true; drops.splice(i,1); continue;
+                    }
+                    score += 10; scoreEl.textContent = score;
+                    addParticles(drops[i].x, drops[i].y, '#4dc9f6', 6);
+                    drops.splice(i,1);
+
+                    var newLevel = Math.floor(score / 100);
+                    if (newLevel > level) {
+                        level = newLevel; shieldFrames = 90; levelUpFlash = 35;
+                        addParticles(playerX, H-playerH, '#ffd700', 50);
+                        addFloatText(W/2, H/2-15*scale, 'LEVEL '+(level+1)+'!', '#ffd700');
+                        addFloatText(W/2, H/2+15*scale, '+20分 | 护盾3秒', '#ffffff');
+                        score += 20; scoreEl.textContent = score;
+                        drops = []; cleared = true;
+                    }
+                }
+            }
+
+            for (var i = particles.length-1; i>=0; i--) {
+                var p = particles[i]; p.x += p.vx; p.y += p.vy;
+                p.life--; if (p.life <= 0) particles.splice(i,1);
+            }
+            for (var i = floatTexts.length-1; i>=0; i--) {
+                var ft = floatTexts[i]; ft.y += ft.vy;
+                ft.life--; if (ft.life <= 0) floatTexts.splice(i,1);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            var grad = ctx.createLinearGradient(0, 0, 0, H);
+            var intensity = Math.min(1, 0.15+level*0.06);
+            grad.addColorStop(0, '#1a1a2e');
+            grad.addColorStop(0.5, '#16213e');
+            grad.addColorStop(1, 'rgba(15,51,96,'+(1-intensity*0.3)+')');
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = 'white';
+            for (var i = 0; i < 30; i++) {
+                var sx = (i*137+50)%W, sy = (i*97+20)%(H*0.6);
+                ctx.globalAlpha = 0.3+(Math.sin(frame*0.02+i)+1)*0.35;
+                ctx.beginPath();
+                ctx.arc(sx, sy, (0.5+(i%3)*0.5)*scale, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+
+            for (var d = 0; d < drops.length; d++) {
+                var drop = drops[d];
+                if (drop.type === 'lightning') {
+                    ctx.fillStyle = '#ffdd00';
+                    ctx.shadowColor = '#ffdd00'; ctx.shadowBlur = 10*scale;
+                    ctx.beginPath();
+                    var fy = drop.y, sr = 4*scale;
+                    ctx.moveTo(drop.x-sr, fy-12*scale);
+                    ctx.lineTo(drop.x+sr*0.5, fy-2*scale);
+                    ctx.lineTo(drop.x-sr*0.25, fy-2*scale);
+                    ctx.lineTo(drop.x+sr*1.25, fy+10*scale);
+                    ctx.lineTo(drop.x-sr*0.5, fy+2*scale);
+                    ctx.lineTo(drop.x+sr*0.5, fy+2*scale);
+                    ctx.closePath(); ctx.fill();
+                    ctx.shadowBlur = 0;
+                } else {
+                    ctx.fillStyle = '#4dc9f6'; ctx.beginPath();
+                    var r = drop.r;
+                    ctx.moveTo(drop.x, drop.y+r);
+                    ctx.arc(drop.x-r*0.6, drop.y, r*0.6, 0, Math.PI*2);
+                    ctx.arc(drop.x+r*0.6, drop.y, r*0.6, 0, Math.PI*2);
+                    ctx.moveTo(drop.x-r*0.5, drop.y-r*0.3);
+                    ctx.lineTo(drop.x, drop.y-r*1.3);
+                    ctx.lineTo(drop.x+r*0.5, drop.y-r*0.3);
+                    ctx.fill();
+                }
+            }
+
+            for (var p = 0; p < particles.length; p++) {
+                var pt = particles[p];
+                ctx.globalAlpha = pt.life/50; ctx.fillStyle = pt.color;
+                ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+
+            for (var f = 0; f < floatTexts.length; f++) {
+                var ft = floatTexts[f];
+                ctx.globalAlpha = Math.min(1, ft.life/40);
+                ctx.fillStyle = ft.color;
+                ctx.font = 'bold ' + Math.floor(16*scale) + 'px sans-serif';
+                ctx.textAlign = 'center'; ctx.fillText(ft.text, ft.x, ft.y); ctx.textAlign = 'start';
+            }
+            ctx.globalAlpha = 1;
+
+            if (levelUpFlash > 0) {
+                ctx.fillStyle = 'rgba(255,215,0,'+(levelUpFlash/35*0.3)+')';
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            var ux = playerX, uy = H - playerH;
+
+            if (shieldFrames > 0) {
+                var sa = 0.25+Math.sin(frame*0.3)*0.15;
+                ctx.strokeStyle = 'rgba(255,215,0,'+sa+')'; ctx.lineWidth = 4*scale;
+                ctx.beginPath(); ctx.arc(ux, uy+10*scale, 45*scale, 0, Math.PI*2); ctx.stroke();
+                ctx.lineWidth = 2*scale;
+                ctx.strokeStyle = 'rgba(255,255,255,'+(sa*0.5)+')';
+                ctx.beginPath(); ctx.arc(ux, uy+10*scale, 43*scale, 0, Math.PI*2); ctx.stroke();
+            }
+
+            ctx.fillStyle = '#e74c3c'; ctx.beginPath();
+            ctx.arc(ux, uy+10*scale, 35*scale, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = '#f39c12'; ctx.beginPath();
+            ctx.arc(ux-12*scale, uy+10*scale, 35*scale, Math.PI, Math.PI+0.35);
+            ctx.lineTo(ux-10*scale, uy-2*scale); ctx.fill();
+            ctx.fillStyle = '#c0392b'; ctx.beginPath();
+            ctx.arc(ux+12*scale, uy+10*scale, 35*scale, Math.PI-0.35, 0);
+            ctx.lineTo(ux+10*scale, uy-2*scale); ctx.fill();
+
+            ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3*scale;
+            ctx.beginPath(); ctx.moveTo(ux, uy+10*scale); ctx.lineTo(ux, uy+playerH); ctx.stroke();
+            ctx.beginPath(); ctx.arc(ux+8*scale, uy+playerH-3*scale, 8*scale, Math.PI, 0); ctx.stroke();
+
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.font = 'bold ' + Math.floor(13*scale) + 'px sans-serif'; ctx.textAlign = 'left';
+            ctx.fillText('Lv.'+(level+1), 8*scale, 20*scale);
+            ctx.fillText('速度 '+getSpeed().toFixed(1)+'x', 8*scale, 38*scale);
+            if (shieldFrames > 0) {
+                ctx.fillStyle = '#ffd700';
+                ctx.fillText('护盾 '+Math.ceil(shieldFrames/30)+'s', W-85*scale, 20*scale);
+            }
+            var remain = (level+1)*100 - score;
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            ctx.font = Math.floor(11*scale)+'px sans-serif'; ctx.textAlign = 'right';
+            ctx.fillText('距升级差 '+remain+' 分', W-8*scale, 38*scale); ctx.textAlign = 'start';
+
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(0, 0, W, H);
+                ctx.fillStyle = '#fff'; ctx.font = 'bold '+Math.floor(28*scale)+'px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('游戏结束', W/2, H/2-12*scale);
+                ctx.font = Math.floor(14*scale)+'px sans-serif';
+                ctx.fillText('得分: '+score+'  Lv.'+(level+1), W/2, H/2+18*scale);
+                ctx.fillText('点击重来', W/2, H/2+42*scale);
+                ctx.textAlign = 'start';
+            }
+        }
+
+        function loop() { update(); draw(); requestAnimationFrame(loop); }
+        loop();
+    })();
+    </script>
+    <script>
+    // ========== PWA 注册 & 自动刷新 ==========
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+
+    var REFRESH_MIN = 30;
+    var nextRefresh = Date.now() + REFRESH_MIN * 60000;
+    function updateRefreshHint() {
+        var hint = document.getElementById('refreshHint');
+        if (!hint) return;
+        var remain = Math.max(0, Math.ceil((nextRefresh - Date.now()) / 60000));
+        hint.textContent = remain > 0 ? remain + '分钟后自动刷新' : '即将刷新...';
+    }
+    updateRefreshHint();
+    setInterval(updateRefreshHint, 30000);
+    setInterval(function() {
+        fetchWeather();
+        nextRefresh = Date.now() + REFRESH_MIN * 60000;
+        updateRefreshHint();
+    }, REFRESH_MIN * 60000);
+    </script>
+</body>
+</html>
