@@ -134,7 +134,7 @@
     <canvas id="bgCanvas"></canvas>
     <div class="container">
         <header>
-            <h1>厦门天气 <span style="font-size:8px;color:rgba(255,255,255,0.4);vertical-align:super;">v16</span></h1>
+            <h1>厦门天气 <span style="font-size:8px;color:rgba(255,255,255,0.4);vertical-align:super;">v17</span></h1>
             <span class="date" id="updateTime"></span>
         </header>
 
@@ -687,27 +687,116 @@
             }
             ctx.fillStyle = '#0d1118';
 
-            // 雨伞
+            // === 雨伞 + 蜡笔小新 ===
             var ux = playerX, uy = groundY - playerH + 10*scale;
+            var umbrellaCY = uy + 10*scale; // 伞面中心
+            var umbrellaR = 35*scale;
+
             if (shieldFrames > 0) {
                 var sa = 0.25+Math.sin(frame*0.3)*0.15;
                 ctx.strokeStyle = 'rgba(255,215,0,'+sa+')'; ctx.lineWidth = 4*scale;
-                ctx.beginPath(); ctx.arc(ux, uy+10*scale, 45*scale, 0, Math.PI*2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(ux, umbrellaCY, 45*scale, 0, Math.PI*2); ctx.stroke();
                 ctx.lineWidth = 2*scale;
                 ctx.strokeStyle = 'rgba(255,255,255,'+(sa*0.5)+')';
-                ctx.beginPath(); ctx.arc(ux, uy+10*scale, 43*scale, 0, Math.PI*2); ctx.stroke();
+                ctx.beginPath(); ctx.arc(ux, umbrellaCY, 43*scale, 0, Math.PI*2); ctx.stroke();
             }
+
+            // 伞面
             ctx.fillStyle = '#e74c3c'; ctx.beginPath();
-            ctx.arc(ux, uy+10*scale, 35*scale, Math.PI, 0); ctx.fill();
+            ctx.arc(ux, umbrellaCY, umbrellaR, Math.PI, 0); ctx.fill();
             ctx.fillStyle = '#f39c12'; ctx.beginPath();
-            ctx.arc(ux-12*scale, uy+10*scale, 35*scale, Math.PI, Math.PI+0.35);
+            ctx.arc(ux-12*scale, umbrellaCY, umbrellaR, Math.PI, Math.PI+0.35);
             ctx.lineTo(ux-10*scale, uy-2*scale); ctx.fill();
             ctx.fillStyle = '#c0392b'; ctx.beginPath();
-            ctx.arc(ux+12*scale, uy+10*scale, 35*scale, Math.PI-0.35, 0);
+            ctx.arc(ux+12*scale, umbrellaCY, umbrellaR, Math.PI-0.35, 0);
             ctx.lineTo(ux+10*scale, uy-2*scale); ctx.fill();
-            ctx.strokeStyle = '#5a2d0c'; ctx.lineWidth = 3*scale;
-            ctx.beginPath(); ctx.moveTo(ux, uy+10*scale); ctx.lineTo(ux, uy+playerH); ctx.stroke();
-            ctx.beginPath(); ctx.arc(ux+8*scale, uy+playerH-3*scale, 8*scale, Math.PI, 0); ctx.stroke();
+
+            // 伞杆
+            ctx.strokeStyle = '#5a2d0c'; ctx.lineWidth = 2.2*scale;
+            ctx.beginPath(); ctx.moveTo(ux, umbrellaCY); ctx.lineTo(ux, groundY-16*scale); ctx.stroke();
+
+            // === 蜡笔小新（站在地面，手持伞杆）===
+            var sx = ux; // 小新 X 中心
+            var feetY = groundY;
+            var headR = 10*scale;
+            var headCY = feetY - 30*scale;
+            var bodyTop = feetY - 21*scale;
+            var bodyBot = feetY - 9*scale;
+            var skin = '#fddcb5';
+            var hairC = '#1a1a1a';
+
+            // 鞋子
+            ctx.fillStyle = '#f5c842';
+            ctx.beginPath(); ctx.ellipse(sx-4*scale, feetY-1*scale, 4.5*scale, 2.5*scale, 0, Math.PI, 0); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(sx+4*scale, feetY-1*scale, 4.5*scale, 2.5*scale, 0, Math.PI, 0); ctx.fill();
+
+            // 腿
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx-5*scale, bodyBot, 4*scale, 8*scale);
+            ctx.fillRect(sx+1*scale, bodyBot, 4*scale, 8*scale);
+
+            // 短裤
+            ctx.fillStyle = '#f5c842';
+            ctx.beginPath(); ctx.moveTo(sx-7*scale, bodyBot-1*scale);
+            ctx.lineTo(sx-7*scale, bodyBot+2*scale); ctx.lineTo(sx+7*scale, bodyBot+2*scale);
+            ctx.lineTo(sx+7*scale, bodyBot-1*scale); ctx.lineTo(sx+10*scale, bodyBot-1*scale);
+            ctx.lineTo(sx+8*scale, bodyBot-6*scale); ctx.lineTo(sx-8*scale, bodyBot-6*scale);
+            ctx.lineTo(sx-10*scale, bodyBot-1*scale); ctx.closePath(); ctx.fill();
+
+            // 上身红T恤
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath(); ctx.moveTo(sx-8*scale, bodyTop);
+            ctx.lineTo(sx+8*scale, bodyTop); ctx.lineTo(sx+9*scale, bodyBot-6*scale);
+            ctx.lineTo(sx-9*scale, bodyBot-6*scale); ctx.closePath(); ctx.fill();
+
+            // 领口
+            ctx.fillStyle = '#fddcb5';
+            ctx.beginPath(); ctx.arc(sx, bodyTop+2*scale, 4*scale, 0, Math.PI); ctx.fill();
+
+            // 手臂（右手握伞杆）
+            ctx.strokeStyle = skin; ctx.lineWidth = 3.5*scale; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(sx+9*scale, bodyTop+4*scale); ctx.lineTo(sx+3*scale, headCY-5*scale); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(sx-9*scale, bodyTop+4*scale); ctx.lineTo(sx-14*scale, bodyTop+10*scale); ctx.stroke();
+
+            // 手（右手握杆）
+            ctx.fillStyle = skin;
+            ctx.beginPath(); ctx.arc(sx+3*scale, headCY-5*scale, 3*scale, 0, Math.PI*2); ctx.fill();
+
+            // 头
+            ctx.fillStyle = skin;
+            ctx.beginPath(); ctx.arc(sx, headCY, headR, 0, Math.PI*2); ctx.fill();
+
+            // 头发（锯齿状）
+            ctx.fillStyle = hairC;
+            ctx.beginPath();
+            var htop = headCY - headR;
+            ctx.moveTo(sx-headR+2*scale, htop+4*scale);
+            ctx.lineTo(sx-headR+1*scale, htop-4*scale); ctx.lineTo(sx-5*scale, htop+1*scale);
+            ctx.lineTo(sx-2*scale, htop-7*scale); ctx.lineTo(sx, htop);
+            ctx.lineTo(sx+4*scale, htop-6*scale); ctx.lineTo(sx+6*scale, htop+1*scale);
+            ctx.lineTo(sx+headR-1*scale, htop-3*scale); ctx.lineTo(sx+headR-3*scale, htop+4*scale);
+            ctx.closePath(); ctx.fill();
+
+            // 粗眉毛
+            ctx.fillStyle = hairC;
+            ctx.fillRect(sx-8*scale, headCY-4*scale, 7*scale, 2*scale);
+            ctx.fillRect(sx+1*scale, headCY-4*scale, 7*scale, 2*scale);
+
+            // 眼睛
+            ctx.beginPath(); ctx.arc(sx-4.5*scale, headCY-1*scale, 1.5*scale, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(sx+4.5*scale, headCY-1*scale, 1.5*scale, 0, Math.PI*2); ctx.fill();
+
+            // 鼻子
+            ctx.beginPath(); ctx.arc(sx, headCY+2*scale, 1.2*scale, 0, Math.PI*2); ctx.fill();
+
+            // 嘴
+            ctx.strokeStyle = hairC; ctx.lineWidth = 1.2*scale;
+            ctx.beginPath(); ctx.arc(sx, headCY+5*scale, 3.5*scale, 0.2*Math.PI, 0.8*Math.PI); ctx.stroke();
+
+            // 腮红
+            ctx.fillStyle = 'rgba(255,160,140,0.45)';
+            ctx.beginPath(); ctx.arc(sx-7*scale, headCY+2*scale, 2.8*scale, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(sx+7*scale, headCY+2*scale, 2.8*scale, 0, Math.PI*2); ctx.fill();
 
             // === HUD ===
             var remain = (level+1)*100 - score;
