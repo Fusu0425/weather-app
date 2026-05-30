@@ -57,23 +57,12 @@
         .forecast-rain { font-size:0.72rem; color:#888; }
         .hourly-section { margin-bottom:20px; }
         .hourly-section h2 { color:#fff; font-size:1.05rem; margin-bottom:10px; text-align:center; }
-        .hourly-nav { display:flex; align-items:center; gap:6px; }
-        .nav-cloud {
-            flex:0 0 42px; height:38px;
-            border:none; cursor:pointer;
-            background:transparent; padding:0;
-            filter:drop-shadow(0 2px 6px rgba(0,0,0,0.1));
-            transition:transform 0.15s, filter 0.2s, opacity 0.2s;
-            -webkit-tap-highlight-color:transparent;
-            user-select:none; outline:none;
-        }
-        .nav-cloud:active { transform:scale(0.85); }
-        .nav-cloud:disabled { filter:drop-shadow(0 1px 3px rgba(0,0,0,0.06)); opacity:0.3; pointer-events:none; }
         .hourly-strip {
-            flex:1; background:rgba(255,255,255,0.92);
+            background:rgba(255,255,255,0.92);
             border-radius:14px; padding:14px 6px;
-            display:flex; gap:0; overflow-x:hidden;
-            scroll-behavior:smooth;
+            display:flex; gap:0; overflow-x:auto;
+            -webkit-overflow-scrolling:touch;
+            scroll-snap-type:x mandatory;
             box-shadow:0 2px 16px rgba(0,0,0,0.07);
         }
         .hourly-item {
@@ -145,7 +134,7 @@
     <canvas id="bgCanvas"></canvas>
     <div class="container">
         <header>
-            <h1>厦门天气 <span style="font-size:8px;color:rgba(255,255,255,0.4);vertical-align:super;">v14</span></h1>
+            <h1>厦门天气 <span style="font-size:8px;color:rgba(255,255,255,0.4);vertical-align:super;">v15</span></h1>
             <span class="date" id="updateTime"></span>
         </header>
 
@@ -246,15 +235,7 @@
                     + '<div class="detail"><span class="detail-label">风速</span><span class="detail-value">' + current.wind_speed_10m + ' km/h</span></div>'
                     + '</div></div>'
                     + '<div class="hourly-section"><h2>未来 24 小时</h2>'
-                    + '<div class="hourly-nav">'
-                    + '<button class="nav-cloud nav-left" onclick="shiftHourly(-1)" disabled>'
-                    + '<svg width="38" height="32" viewBox="0 0 38 32"><g><circle cx="9" cy="15" r="7.5" fill="#fff"/><circle cx="18" cy="11" r="9.5" fill="#fff"/><circle cx="26" cy="14" r="7" fill="#fff"/><rect x="3" y="12" width="28" height="11" rx="5.5" fill="#fff"/></g><polyline points="18,8 13,14 18,20" stroke="#6c5ce7" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-                    + '</button>'
-                    + '<div class="hourly-strip" style="background:rgba(255,255,255,0.92)!important;border-radius:14px!important;padding:14px 6px!important;display:flex!important;gap:0!important;overflow-x:hidden!important;scroll-behavior:smooth!important;box-shadow:0 2px 16px rgba(0,0,0,0.07)!important;">' + hourlyHtml + '</div>'
-                    + '<button class="nav-cloud nav-right" onclick="shiftHourly(1)">'
-                    + '<svg width="38" height="32" viewBox="0 0 38 32"><g><circle cx="9" cy="15" r="7.5" fill="#fff"/><circle cx="18" cy="11" r="9.5" fill="#fff"/><circle cx="26" cy="14" r="7" fill="#fff"/><rect x="3" y="12" width="28" height="11" rx="5.5" fill="#fff"/></g><polyline points="16,8 21,14 16,20" stroke="#6c5ce7" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-                    + '</button>'
-                    + '</div></div>'
+                    + '<div class="hourly-strip">' + hourlyHtml + '</div></div>'
                     + '<h2>未来 7 天</h2>'
                     + '<div class="forecast-grid">' + daysHtml + '</div>';
             })
@@ -265,23 +246,6 @@
     }
 
     fetchWeather();
-
-    // ========== 小时预报翻页 ==========
-    var HOURLY_ITEM_W = 50;
-    var HOURLY_PER_PAGE = 8;
-    window.shiftHourly = function(dir) {
-        var strip = document.querySelector('.hourly-strip');
-        var leftBtn = document.querySelector('.nav-left');
-        var rightBtn = document.querySelector('.nav-right');
-        if (!strip) return;
-        var maxScroll = strip.scrollWidth - strip.clientWidth;
-        var target = Math.max(0, Math.min(maxScroll, strip.scrollLeft + dir * HOURLY_PER_PAGE * HOURLY_ITEM_W));
-        strip.scrollTo({left: target, behavior: 'smooth'});
-        setTimeout(function() {
-            if (leftBtn) leftBtn.disabled = strip.scrollLeft <= 2;
-            if (rightBtn) rightBtn.disabled = strip.scrollLeft >= maxScroll - 2;
-        }, 350);
-    };
 
     // ========== 背景特效模块 ==========
     (function() {
