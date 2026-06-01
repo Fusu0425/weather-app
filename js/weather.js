@@ -26,8 +26,8 @@ var Weather = (function() {
         var params = [
             'latitude=' + lat,
             'longitude=' + lon,
-            'current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code',
-            'daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+            'current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,uv_index,weather_code',
+            'daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max',
             'hourly=temperature_2m,weather_code',
             'timezone=Asia/Shanghai',
             'forecast_days=7',
@@ -87,65 +87,48 @@ var Weather = (function() {
         return null;
     }
 
+    // ---- 获取 UV 等级 ----
+    function getUVLevel(uv) {
+        for (var i = 0; i < UV_LEVELS.length; i++) {
+            if (uv <= UV_LEVELS[i].max) return UV_LEVELS[i];
+        }
+        return UV_LEVELS[UV_LEVELS.length - 1];
+    }
+
     // ---- 渲染全部天气 ----
     function render(weatherData, aqiData) {
         var container = document.getElementById('weatherContent');
         if (!container) return;
 
         var html = '';
-        var wc = weatherData.current.weather_code;
+        var cur = weatherData.current;
+        var wc = cur.weather_code;
         var cd = WEATHER_CODES[wc] || ['未知', '❓'];
 
-        // 天气预警
+        // === 天气预警 ===
         var alert = getAlert(wc, weatherData.daily.precipitation_probability_max[0]);
         if (alert) {
             html += '<div class="alert-bar show">' + alert.text + '</div>';
         }
 
-        // 当前天气
+        // === ① Hero 天气卡片 ===
         html += '<div class="current-card">'
-            + '<div class="current-main">'
-            + '<span class="current-icon">' + cd[1] + '</span>'
-            + '<span class="current-temp">' + weatherData.current.temperature_2m + '<sup>°C</sup></span>'
-            + '</div>'
+            + '<div class="current-icon">' + cd[1] + '</div>'
+            + '<div class="current-temp">' + Math.round(cur.temperature_2m) + '<sup>°C</sup></div>'
             + '<div class="current-desc">' + cityName + ' · ' + cd[0] + '</div>'
-            + '<div class="current-details">'
-            + '<div class="detail"><span class="detail-label">湿度</span><span class="detail-value">' + weatherData.current.relative_humidity_2m + '%</span></div>'
-            + '<div class="detail"><span class="detail-label">风速</span><span class="detail-value">' + weatherData.current.wind_speed_10m + ' km/h</span></div>'
-            + '</div></div>';
+            + '</div>';
 
-        // AQI
-        if (aqiData && aqiData.current) {
-            var aq = aqiData.current;
-            var lvl = getAQILevel(aq.european_aqi || 0);
-            html += '<div class="aqi-card">'
-                + '<div class="aqi-header">🌬️ 空气质量</div>'
-                + '<div class="aqi-value" style="color:' + lvl.color + '">' + Math.round(aq.european_aqi || 0) + '</div>'
-                + '<div class="aqi-label" style="color:' + lvl.color + '">' + lvl.label + '</div>'
-                + '<div class="aqi-details">'
-                + '<span>PM2.5 ' + (aq.pm2_5 != null ? Math.round(aq.pm2_5) + ' µg/m³' : '--') + '</span>'
-                + '<span>PM10 ' + (aq.pm10 != null ? Math.round(aq.pm10) + ' µg/m³' : '--') + '</span>'
-                + '</div></div>';
-        }
+        // 提前计算四宫格数据（移到后面去了）
+        var uvIdx = cur.uv_index != null ? Math.round(cur.uv_index) : null;
+        var uvLvl = uvIdx != null ? getUVLevel(uvIdx) : null;
+        var wDir = cur.wind_direction_10m != null ? windDir(cur.wind_direction_10m) : '--';
+        var wLv = cur.wind_speed_10m != null ? windLevel(cur.wind_speed_10m) : null;
+        var feelsLike = cur.apparent_temperature != null ? Math.round(cur.apparent_temperature) : '--';
+        var humidity = cur.relative_humidity_2m != null ? cur.relative_humidity_2m : '--';
 
-        // 逐时预报
-        var hourly = weatherData.hourly;
-        html += '<div class="hourly-section"><h2>未来 24 小时</h2><div class="hourly-strip">';
-        var hLen = Math.min(hourly.time.length, 24);
-        for (var i = 0; i < hLen; i++) {
-            var hc = WEATHER_CODES[hourly.weather_code[i]] || ['未知', '❓'];
-            var hHour = hourly.time[i].split('T')[1].split(':')[0];
-            html += '<div class="hourly-item" style="flex:0 0 50px;text-align:center;border-right:1px solid rgba(0,0,0,0.07);padding:2px 0">'
-                + '<div class="hourly-time" style="font-size:10px;color:#999;margin-bottom:6px">' + hHour + '</div>'
-                + '<div class="hourly-icon" style="font-size:1.25rem;margin-bottom:6px;line-height:1">' + hc[1] + '</div>'
-                + '<div class="hourly-temp" style="font-size:11px;font-weight:600;color:#333">' + Math.round(hourly.temperature_2m[i]) + '°</div>'
-                + '</div>';
-        }
-        html += '</div></div>';
-
-        // 7天预报
+        // === ② 未来 7 天预报 ===
         var daily = weatherData.daily;
-        html += '<h2>未来 7 天</h2><div class="forecast-grid">';
+        html += '<h2 class="section-title">未来 7 天</h2><div class="forecast-grid">';
         for (var d = 0; d < daily.time.length; d++) {
             var dd = WEATHER_CODES[daily.weather_code[d]] || ['未知', '❓'];
             var shortDate = daily.time[d].slice(5).replace(/-/g, '/');
@@ -154,13 +137,80 @@ var Weather = (function() {
                 + '<div class="forecast-icon">' + dd[1] + '</div>'
                 + '<div class="forecast-desc">' + dd[0] + '</div>'
                 + '<div class="forecast-temps">'
-                + '<span class="temp-high">' + daily.temperature_2m_max[d] + '°</span>'
-                + '<span class="temp-low">' + daily.temperature_2m_min[d] + '°</span>'
+                + '<span class="temp-high">' + Math.round(daily.temperature_2m_max[d]) + '°</span>'
+                + '<span class="temp-low">' + Math.round(daily.temperature_2m_min[d]) + '°</span>'
                 + '</div>'
-                + '<div class="forecast-rain">雨 ' + daily.precipitation_probability_max[d] + '%</div>'
+                + '<div class="forecast-rain">🌧️ ' + daily.precipitation_probability_max[d] + '%</div>'
                 + '</div>';
         }
         html += '</div>';
+
+        // === ③ 未来 24 小时 ===
+        var hourly = weatherData.hourly;
+        html += '<h2 class="section-title">未来 24 小时</h2><div class="hourly-strip">';
+        var hLen = Math.min(hourly.time.length, 24);
+        for (var i = 0; i < hLen; i++) {
+            var hc = WEATHER_CODES[hourly.weather_code[i]] || ['未知', '❓'];
+            var hHour = hourly.time[i].split('T')[1].split(':')[0];
+            html += '<div class="hourly-item">'
+                + '<div class="hourly-time">' + hHour + ':00</div>'
+                + '<div class="hourly-icon">' + hc[1] + '</div>'
+                + '<div class="hourly-temp">' + Math.round(hourly.temperature_2m[i]) + '°</div>'
+                + '</div>';
+        }
+        html += '</div>';
+
+        // === ④ 四宫格：湿度·体感·风向·紫外线 ===
+        html += '<div class="detail-grid">'
+            + '<div class="detail-card">'
+            + '<div class="detail-card-icon">💧</div>'
+            + '<div class="detail-card-value">' + humidity + '%</div>'
+            + '<div class="detail-card-label">湿度</div>'
+            + '</div>'
+            + '<div class="detail-card">'
+            + '<div class="detail-card-icon">🌡️</div>'
+            + '<div class="detail-card-value">' + feelsLike + '<span class="dc-unit">°</span></div>'
+            + '<div class="detail-card-label">体感温度</div>'
+            + '</div>'
+            + '<div class="detail-card">'
+            + '<div class="detail-card-icon">💨</div>'
+            + '<div class="detail-card-value">' + wDir + '风<span class="dc-unit"> ' + wLv + '级</span></div>'
+            + '<div class="detail-card-label">风向风力</div>'
+            + '</div>'
+            + '<div class="detail-card">'
+            + '<div class="detail-card-icon">☀️</div>'
+            + '<div class="detail-card-value" style="color:' + (uvLvl ? uvLvl.color : '#999') + '">' + (uvIdx != null ? uvIdx : '--') + '</div>'
+            + '<div class="detail-card-label">紫外线 <span class="dc-sub">' + (uvLvl ? uvLvl.label : '无数据') + '</span></div>'
+            + '</div>'
+            + '</div>';
+
+        // === ⑤ AQI 空气质量 ===
+        if (aqiData && aqiData.current) {
+            var aq = aqiData.current;
+            var lvl = getAQILevel(aq.european_aqi || 0);
+            html += '<div class="aqi-card">'
+                + '<div class="aqi-header"><span class="aqi-header-icon">🌬️</span> 空气质量</div>'
+                + '<div class="aqi-body">'
+                + '<div class="aqi-value-wrap">'
+                + '<span class="aqi-value" style="color:' + lvl.color + '">' + Math.round(aq.european_aqi || 0) + '</span>'
+                + '<span class="aqi-badge" style="background:' + lvl.color + ';color:#fff">' + lvl.label + '</span>'
+                + '</div>'
+                + '<div class="aqi-details">'
+                + '<span>PM2.5 ' + (aq.pm2_5 != null ? Math.round(aq.pm2_5) + ' <b>µg/m³</b>' : '--') + '</span>'
+                + '<span>PM10 ' + (aq.pm10 != null ? Math.round(aq.pm10) + ' <b>µg/m³</b>' : '--') + '</span>'
+                + '</div>'
+                + '</div>'
+                // AQI 评分标准
+                + '<div class="aqi-legend">'
+                + '<span class="aqi-legend-item"><i style="background:#00b800"></i>优 0-50</span>'
+                + '<span class="aqi-legend-item"><i style="background:#c8a000"></i>良 51-100</span>'
+                + '<span class="aqi-legend-item"><i style="background:#e07000"></i>轻度 101-150</span>'
+                + '<span class="aqi-legend-item"><i style="background:#d00000"></i>中度 151-200</span>'
+                + '<span class="aqi-legend-item"><i style="background:#99004c"></i>重度 201-300</span>'
+                + '<span class="aqi-legend-item"><i style="background:#7e0023"></i>严重 301+</span>'
+                + '</div>'
+                + '</div>';
+        }
 
         container.innerHTML = html;
     }

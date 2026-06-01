@@ -76,10 +76,10 @@ var CODE_TO_THEME = {
 
 // ---- AQI 等级 ----
 var AQI_LEVELS = [
-    { max: 50,   label: '优',   color: '#00e400', bg: '#e0f7e0' },
-    { max: 100,  label: '良',   color: '#ffff00', bg: '#ffffe0' },
-    { max: 150,  label: '轻度', color: '#ff7e00', bg: '#fff0e0' },
-    { max: 200,  label: '中度', color: '#ff0000', bg: '#ffe0e0' },
+    { max: 50,   label: '优',   color: '#00b800', bg: '#e0f7e0' },
+    { max: 100,  label: '良',   color: '#c8a000', bg: '#fff8d0' },
+    { max: 150,  label: '轻度', color: '#e07000', bg: '#fff0e0' },
+    { max: 200,  label: '中度', color: '#d00000', bg: '#ffe0e0' },
     { max: 300,  label: '重度', color: '#99004c', bg: '#f5e0f0' },
     { max: 9999, label: '严重', color: '#7e0023', bg: '#f0d0d8' }
 ];
@@ -102,6 +102,30 @@ var GAME_CONFIG = {
     SHIELD_FRAMES: 90,
     LEVEL_BONUS: 20
 };
+
+// ---- UV 指数等级 ----
+var UV_LEVELS = [
+    { max: 2,  label: '低',   color: '#4caf50' },
+    { max: 5,  label: '中等', color: '#f0c040' },
+    { max: 7,  label: '高',   color: '#ff7e00' },
+    { max: 10, label: '很高', color: '#e74c3c' },
+    { max: 99, label: '极高', color: '#99004c' }
+];
+
+// 风向角度(°) → 中文方位
+function windDir(deg) {
+    var dirs = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'];
+    return dirs[Math.round(((deg % 360) + 360) % 360 / 45) % 8];
+}
+
+// 风速 km/h → 风力等级
+function windLevel(kmh) {
+    var levels = [0, 1, 6, 12, 20, 29, 39, 50, 62, 75, 89, 103, 118];
+    for (var i = levels.length - 1; i >= 0; i--) {
+        if (kmh >= levels[i]) return i;
+    }
+    return 0;
+}
 
 // ---- 自动刷新间隔 (毫秒) ----
 var REFRESH_INTERVAL = 30 * 60 * 1000; // 30 分钟

@@ -89,9 +89,8 @@ var App = (function() {
 
     // ---- 定位并加载 ----
     function loadWithLocation() {
-        getLocation(function(lat, lon) {
-            currentCity = (lat === DEFAULT_CITY.lat && lon === DEFAULT_CITY.lon) ?
-                DEFAULT_CITY.name : lat.toFixed(2) + ',' + lon.toFixed(2);
+        getLocation(function(lat, lon, city) {
+            currentCity = city || DEFAULT_CITY.name;
             Weather.setCity(currentCity);
             Weather.load(lat, lon);
             document.getElementById('cityName').textContent = currentCity;

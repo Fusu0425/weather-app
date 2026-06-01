@@ -186,6 +186,38 @@ header h1 {
     animation: shimmer 1.5s infinite;
 }
 
+/* 四宫格骨架 */
+.skeleton-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.skeleton-dc {
+    height: 90px;
+    border-radius: var(--radius);
+    background: linear-gradient(90deg, rgba(255,255,255,0.75) 25%, rgba(255,255,255,0.95) 50%, rgba(255,255,255,0.75) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* 24小时骨架条 */
+.skeleton-hourly {
+    display: flex;
+    gap: 6px;
+    overflow: hidden;
+}
+
+.skeleton-hr {
+    flex: 0 0 48px;
+    height: 80px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.8) 25%, rgba(255,255,255,0.95) 50%, rgba(255,255,255,0.8) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
 .skeleton-forecast {
     display: flex;
     gap: 8px;
@@ -206,105 +238,184 @@ header h1 {
     100% { background-position: 200% 0; }
 }
 
-/* ---- 当前天气卡片 ---- */
+/* ---- 当前天气卡片 (Hero) ---- */
 .current-card {
     background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 20px 16px;
+    padding: 28px 16px 18px;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
     box-shadow: var(--card-shadow);
     transition: background var(--transition), box-shadow var(--transition);
     animation: fadeIn 0.4s ease;
 }
 
-.current-main {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+.current-icon {
+    font-size: 56px;
+    line-height: 1;
+    margin-bottom: 4px;
 }
-
-.current-icon { font-size: 2rem; }
 
 .current-temp {
-    font-size: 2rem;
+    font-size: 48px;
     font-weight: 700;
     color: var(--text-primary);
+    line-height: 1.1;
 }
-.current-temp sup { font-size: 0.9rem; font-weight: 400; }
+.current-temp sup {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text-secondary);
+}
 
 .current-desc {
-    font-size: 1rem;
+    font-size: 15px;
     color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* ---- 四宫格详情 ---- */
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     margin-bottom: 14px;
+    animation: fadeIn 0.4s ease;
 }
 
-.current-details {
-    display: flex;
-    justify-content: center;
-    gap: 36px;
+.detail-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 16px 10px 14px;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+    transition: background var(--transition), transform 0.15s;
+}
+.detail-card:active { transform: scale(0.97); }
+
+.detail-card-icon {
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 6px;
 }
 
-.detail { display: flex; flex-direction: column; }
-.detail-label { font-size: 0.78rem; color: var(--text-muted); }
-.detail-value { font-size: 1rem; font-weight: 600; color: var(--text-secondary); }
+.detail-card-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.detail-card-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.dc-unit { font-size: 14px; font-weight: 400; color: var(--text-secondary); }
+.dc-sub { font-size: 11px !important; color: var(--text-muted); margin-left: 2px; }
 
 /* ---- AQI 卡片 ---- */
 .aqi-card {
     background: var(--card-bg);
     border-radius: var(--radius);
     padding: 14px 16px;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
     box-shadow: var(--card-shadow);
     transition: background var(--transition);
     animation: fadeIn 0.4s ease;
-    text-align: center;
 }
 
 .aqi-header {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+.aqi-header-icon { margin-right: 4px; }
+
+.aqi-body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 6px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.aqi-value-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
 }
 
 .aqi-value {
-    font-size: 2rem;
+    font-size: 36px;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1;
 }
 
-.aqi-label {
-    font-size: 0.85rem;
+.aqi-badge {
+    font-size: 13px;
     font-weight: 600;
-    padding: 2px 10px;
-    border-radius: 10px;
+    padding: 3px 12px;
+    border-radius: 12px;
+    letter-spacing: 1px;
 }
 
 .aqi-details {
     display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.aqi-details b { font-weight: 400; opacity: 0.5; }
+
+/* AQI 评分标准图例 */
+.aqi-legend {
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 24px;
-    margin-top: 8px;
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    gap: 6px 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,0,0,0.06);
 }
 
-.aqi-details span { white-space: nowrap; }
+.aqi-legend-item {
+    font-size: 10px !important;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+}
+
+.aqi-legend-item i {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
 
 /* ---- 节标题 ---- */
+.section-title {
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
 h2 {
     color: white;
     margin-bottom: 12px;
     font-size: 1.15rem;
     text-align: center;
 }
-.hourly-section { margin-bottom: 20px; }
-.hourly-section h2 { font-size: 1.05rem; margin-bottom: 10px; }
 
 /* ---- 逐时预报条 ---- */
 .hourly-strip {
@@ -318,10 +429,11 @@ h2 {
     scroll-snap-type: x mandatory;
     box-shadow: var(--card-shadow);
     transition: background var(--transition);
+    margin-bottom: 20px;
 }
 
 .hourly-item {
-    flex: 0 0 50px;
+    flex: 0 0 52px;
     text-align: center;
     border-right: 1px solid rgba(0,0,0,0.07);
     padding: 2px 0;
@@ -331,19 +443,19 @@ h2 {
 .hourly-item:last-child { border-right: none; }
 
 .hourly-time {
-    font-size: 10px;
+    font-size: 10px !important;
     color: var(--text-muted);
     margin-bottom: 6px;
 }
 
 .hourly-icon {
-    font-size: 1.25rem;
+    font-size: 20px;
     margin-bottom: 6px;
     line-height: 1;
 }
 
 .hourly-temp {
-    font-size: 11px;
+    font-size: 11px !important;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -370,9 +482,9 @@ h2 {
     animation: fadeIn 0.4s ease;
 }
 
-.forecast-date { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; white-space: nowrap; }
-.forecast-icon { font-size: 1.6rem; margin-bottom: 2px; }
-.forecast-desc { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px; }
+.forecast-date { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; white-space: nowrap; }
+.forecast-icon { font-size: 26px; margin-bottom: 2px; }
+.forecast-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
 
 .forecast-temps {
     display: flex;
@@ -381,9 +493,9 @@ h2 {
     margin-bottom: 4px;
 }
 
-.temp-high { font-weight: 700; color: #e74c3c; font-size: 0.9rem; }
-.temp-low { color: #3498db; font-size: 0.9rem; }
-.forecast-rain { font-size: 0.72rem; color: var(--text-muted); }
+.temp-high { font-weight: 700; color: #e74c3c; font-size: 14px; }
+.temp-low { color: #3498db; font-size: 14px; }
+.forecast-rain { font-size: 11px !important; color: var(--text-muted); }
 
 /* ---- 加载 & 错误 ---- */
 .loading-box { text-align: center; color: white; padding: 40px; }
@@ -488,16 +600,23 @@ h2 {
 @media (min-width: 640px) {
     body { padding: 24px; }
     .container { max-width: 700px; }
-    header h1 { font-size: 2rem; }
-    .current-icon { font-size: 3rem; }
-    .current-temp { font-size: 2.6rem; }
+    header h1 { font-size: 1.8rem; }
+    .current-icon { font-size: 72px; }
+    .current-temp { font-size: 56px; }
+    .current-temp sup { font-size: 24px; }
+    .detail-card { padding: 20px 16px 18px; }
+    .detail-card-icon { font-size: 34px; }
+    .detail-card-value { font-size: 26px; }
     .forecast-card { flex: 0 0 110px; }
-    .forecast-icon { font-size: 2rem; }
-    .hourly-item { flex: 0 0 62px; }
-    .hourly-icon { font-size: 1.35rem; }
+    .forecast-icon { font-size: 30px; }
+    .hourly-item { flex: 0 0 64px; }
+    .hourly-icon { font-size: 22px; }
 }
 
 @media (min-width: 800px) {
+    .detail-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
     .forecast-grid {
         overflow-x: visible;
         display: grid;
@@ -506,7 +625,7 @@ h2 {
     .hourly-strip {
         overflow-x: visible;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(55px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
         gap: 0;
     }
     .hourly-item { flex: unset; }
