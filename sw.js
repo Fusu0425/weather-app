@@ -2,7 +2,7 @@
  * 厦门天气 — Service Worker (离线缓存策略)
  * ============================================ */
 
-var CACHE_NAME = 'xiamen-weather-v7';
+var CACHE_NAME = 'xiamen-weather-v8';
 var FILES_TO_CACHE = [
     './',
     'index.html',

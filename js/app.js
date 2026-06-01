@@ -162,13 +162,25 @@ var App = (function() {
     // ---- 全屏切换 ----
     function toggleFullscreen() {
         var el = document.documentElement;
-        if (!document.fullscreenElement) {
+        var supported = false;
+
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            // 尝试标准 Fullscreen API
             if (el.requestFullscreen) {
-                el.requestFullscreen();
-            } else if (el.webkitRequestFullscreen) {
+                el.requestFullscreen().catch(function(){});
+                supported = true;
+            }
+            if (!supported && el.webkitRequestFullscreen) {
                 el.webkitRequestFullscreen();
-            } else if (el.msRequestFullscreen) {
-                el.msRequestFullscreen();
+                supported = true;
+            }
+            // iOS Safari
+            if (!supported && el.webkitRequestFullscreen) {
+                el.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                supported = true;
+            }
+            if (!supported) {
+                alert('当前浏览器不支持全屏。\n\n👉 建议用 Chrome 打开，添加到桌面后就是全屏 App。');
             }
         } else {
             if (document.exitFullscreen) {
