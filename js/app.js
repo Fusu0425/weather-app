@@ -147,6 +147,36 @@ var App = (function() {
                 this.textContent = darkMode ? '🌙' : '☀️';
             });
         }
+
+        // 全屏按钮
+        var fsBtn = document.getElementById('fullscreenBtn');
+        if (fsBtn) {
+            fsBtn.addEventListener('click', toggleFullscreen);
+            // 非 PWA 环境下才显示这个按钮，Chrome PWA 下隐藏
+            if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+                fsBtn.style.display = 'none';
+            }
+        }
+    }
+
+    // ---- 全屏切换 ----
+    function toggleFullscreen() {
+        var el = document.documentElement;
+        if (!document.fullscreenElement) {
+            if (el.requestFullscreen) {
+                el.requestFullscreen();
+            } else if (el.webkitRequestFullscreen) {
+                el.webkitRequestFullscreen();
+            } else if (el.msRequestFullscreen) {
+                el.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
     }
 
     // ---- 注册 PWA ----
