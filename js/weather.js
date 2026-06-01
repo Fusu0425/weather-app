@@ -95,6 +95,54 @@ var Weather = (function() {
         return UV_LEVELS[UV_LEVELS.length - 1];
     }
 
+    // ---- 智能问候语 ----
+    function getGreeting(cur) {
+        var h = new Date().getHours();
+        var code = cur.weather_code;
+        var timeWord, timeEmoji;
+
+        if (h >= 6 && h < 9)       { timeWord = '早上好呀'; timeEmoji = '🌅'; }
+        else if (h >= 9 && h < 12) { timeWord = '上午好';   timeEmoji = '☀️'; }
+        else if (h >= 12 && h < 14){ timeWord = '中午好';   timeEmoji = '🌞'; }
+        else if (h >= 14 && h < 18){ timeWord = '下午好';   timeEmoji = '🌤️'; }
+        else if (h >= 18 && h < 22){ timeWord = '晚上好';   timeEmoji = '🌇'; }
+        else                       { timeWord = '夜深了';   timeEmoji = '🌙'; }
+
+        var hint;
+        if (code === 0)                  hint = '今天是个大晴天呢~';
+        else if (code >= 1 && code <= 2) hint = '天气还不错哦~';
+        else if (code === 3)             hint = '虽然有点阴，但心情要晴朗~';
+        else if (code >= 45 && code <=48)hint = '雾气蒙蒙，出门注意安全~';
+        else if (code >= 51 && code <=65)hint = '下雨天，记得带伞哦~';
+        else if (code >= 71 && code <=86)hint = '好美的雪天呀~';
+        else if (code >= 95)             hint = '雷雨天，待在家最安全~';
+        else                             hint = '又是元气满满的一天~';
+
+        return { emoji: timeEmoji, greeting: timeWord, hint: hint };
+    }
+
+    // ---- 生活小建议 ----
+    function getLifeTips(cur) {
+        var tips = [];
+        var code = cur.weather_code;
+        var temp = cur.temperature_2m;
+        var uv = cur.uv_index;
+        var hum = cur.relative_humidity_2m;
+
+        if (uv >= 6)                              tips.push({ icon: '🧴', text: '注意防晒' });
+        if (code >= 51 && code <= 82)             tips.push({ icon: '☂️', text: '出门带伞' });
+        if (temp < 10)                            tips.push({ icon: '🧥', text: '多穿衣服' });
+        if (temp > 32)                            tips.push({ icon: '💦', text: '防暑降温' });
+        if (hum > 80)                             tips.push({ icon: '💨', text: '室内除湿' });
+        if (code <= 1 && temp >= 15 && temp <= 28)tips.push({ icon: '🏃', text: '适合运动' });
+        if (code <= 2 && uv >= 3)                 tips.push({ icon: '👕', text: '适合晾晒' });
+
+        if (tips.length === 0) { tips.push({ icon: '🌸', text: '享受生活' }); }
+        if (tips.length === 1) { tips.push({ icon: '🍵', text: '保持好心情' }); }
+
+        return tips.slice(0, 4);
+    }
+
     // ---- 渲染全部天气 ----
     function render(weatherData, aqiData) {
         var container = document.getElementById('weatherContent');
@@ -117,6 +165,15 @@ var Weather = (function() {
             + '<div class="current-temp">' + Math.round(cur.temperature_2m) + '<sup>°C</sup></div>'
             + '<div class="current-desc">' + cityName + ' · ' + cd[0] + '</div>'
             + '</div>';
+
+        // === 💬 问候卡片 ===
+        var greet = getGreeting(cur);
+        html += '<div class="greeting-card">'
+            + '<span class="greeting-emoji">' + greet.emoji + '</span>'
+            + '<div class="greeting-text">'
+            + '<span class="greeting-hello">' + greet.greeting + '</span>'
+            + '<span class="greeting-hint">' + greet.hint + '</span>'
+            + '</div></div>';
 
         // 提前计算四宫格数据（移到后面去了）
         var uvIdx = cur.uv_index != null ? Math.round(cur.uv_index) : null;
@@ -183,6 +240,14 @@ var Weather = (function() {
             + '<div class="detail-card-label">紫外线 <span class="dc-sub">' + (uvLvl ? uvLvl.label : '无数据') + '</span></div>'
             + '</div>'
             + '</div>';
+
+        // === 💡 生活小建议 ===
+        var tips = getLifeTips(cur);
+        html += '<div class="tips-bar">';
+        for (var t = 0; t < tips.length; t++) {
+            html += '<span class="tip-tag">' + tips[t].icon + ' ' + tips[t].text + '</span>';
+        }
+        html += '</div>';
 
         // === ⑤ AQI 空气质量 ===
         if (aqiData && aqiData.current) {

@@ -7,7 +7,7 @@
     --bg-start: #667eea;
     --bg-end: #764ba2;
     --card-bg: rgba(255,255,255,0.95);
-    --card-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
     --text-primary: #333;
     --text-secondary: #666;
     --text-muted: #999;
@@ -237,6 +237,72 @@ header h1 {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
 }
+
+/* ---- 问候卡片 ---- */
+.greeting-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(8px);
+    border-radius: 20px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    animation: fadeIn 0.5s ease;
+}
+
+.greeting-emoji {
+    font-size: 36px;
+    flex-shrink: 0;
+    animation: bounce-greet 1.5s ease-in-out infinite;
+}
+
+@keyframes bounce-greet {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.greeting-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.greeting-hello {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.greeting-hint {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+}
+
+/* ---- 生活建议标签栏 ---- */
+.tips-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    animation: fadeIn 0.5s ease;
+}
+
+.tip-tag {
+    font-size: 13px;
+    background: rgba(255,255,255,0.22);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    transition: transform 0.15s, background 0.2s;
+}
+.tip-tag:active { transform: scale(0.95); background: rgba(255,255,255,0.35); }
 
 /* ---- 当前天气卡片 (Hero) ---- */
 .current-card {
@@ -590,10 +656,23 @@ h2 {
 /* ---- 页脚 ---- */
 .app-footer {
     text-align: center;
-    color: rgba(255,255,255,0.5);
-    font-size: 0.72rem;
     margin-top: 24px;
-    padding-bottom: 16px;
+    padding-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.footer-warm {
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.footer-info {
+    font-size: 11px !important;
+    color: rgba(255,255,255,0.4);
 }
 
 /* ---- 响应式 ---- */

@@ -134,8 +134,33 @@ var App = (function() {
         }
     }
 
+    // ---- 随机暖心页脚 ----
+    var warmMsgs = [
+        '🌸 生活明朗，万物可爱',
+        '☕ 愿你被世界温柔以待',
+        '✨ 今天也要开心呀',
+        '🍀 好事总会发生在下个转弯',
+        '😊 记得微笑，不止今天',
+        '🌈 风雨过后，总有彩虹',
+        '💛 保持热爱，奔赴山海',
+        '🌟 每一天都是限量版',
+        '🎈 天气很好，心情也是',
+        '🍃 清风徐来，水波不兴'
+    ];
+
+    function randomWarmMsg() {
+        var el = document.getElementById('warmMsg');
+        if (el) {
+            var i = Math.floor(Math.random() * warmMsgs.length);
+            el.textContent = warmMsgs[i];
+        }
+    }
+
     // ---- 启动 ----
     function init() {
+        // 暖心页脚
+        randomWarmMsg();
+
         // 暗色模式
         applyDarkMode(detectDarkMode());
 
