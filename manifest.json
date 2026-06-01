@@ -1,12 +1,14 @@
 {
   "name": "厦门天气",
   "short_name": "厦门天气",
-  "description": "厦门实时天气与7天预报",
+  "description": "厦门实时天气、AQI空气质量、7天预报与接雨滴小游戏",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#667eea",
   "orientation": "portrait-primary",
+  "categories": ["weather", "games"],
+  "lang": "zh-CN",
   "icons": [
     {
       "src": "icon.svg",

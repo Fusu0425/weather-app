@@ -1,0 +1,515 @@
+/* ============================================
+ * 厦门天气小程序 — 样式表
+ * ============================================ */
+
+/* ---- CSS 变量 ---- */
+:root {
+    --bg-start: #667eea;
+    --bg-end: #764ba2;
+    --card-bg: rgba(255,255,255,0.95);
+    --card-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-muted: #999;
+    --radius: 16px;
+    --radius-sm: 12px;
+    --transition: 0.3s ease;
+}
+
+/* 暗色主题变量 */
+:root.dark-mode {
+    --card-bg: rgba(30,30,50,0.95);
+    --card-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    --text-primary: #e0e0e0;
+    --text-secondary: #aaa;
+    --text-muted: #777;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not(.light-mode) {
+        --card-bg: rgba(30,30,50,0.95);
+        --card-shadow: 0 4px 24px rgba(0,0,0,0.35);
+        --text-primary: #e0e0e0;
+        --text-secondary: #aaa;
+        --text-muted: #777;
+    }
+}
+
+/* ---- 基础重置 ---- */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    min-height: 100vh;
+    padding: 16px;
+    transition: background var(--transition);
+}
+
+#bgCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+/* ---- Header ---- */
+header {
+    text-align: center;
+    color: white;
+    margin-bottom: 16px;
+}
+
+header h1 {
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 2px;
+}
+
+.header-row h1 { margin-bottom: 0; }
+
+.header-date {
+    font-size: 0.8rem;
+    opacity: 0.75;
+}
+
+/* ---- Header 按钮 ---- */
+.icon-btn {
+    width: 32px; height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    line-height: 1;
+}
+.icon-btn:hover { background: rgba(255,255,255,0.3); }
+.icon-btn:active { transform: scale(0.92); }
+.icon-btn.spinning { animation: spin 0.8s ease-out; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- 天气预警条 ---- */
+.alert-bar {
+    background: #ff4757;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: center;
+    animation: alertPulse 0.6s ease-in-out;
+    display: none;
+}
+.alert-bar.show { display: block; }
+@keyframes alertPulse {
+    0% { transform: scale(0.95); opacity: 0; }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---- 骨架屏 ---- */
+.skeleton {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    margin-bottom: 20px;
+    box-shadow: var(--card-shadow);
+}
+
+.skeleton-current {
+    text-align: center;
+}
+
+.skeleton-icon {
+    width: 60px; height: 60px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-temp {
+    width: 100px; height: 36px;
+    margin: 0 auto 8px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-text {
+    width: 60%;
+    height: 16px;
+    margin: 0 auto 14px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-details {
+    display: flex;
+    justify-content: center;
+    gap: 36px;
+}
+
+.skeleton-detail {
+    width: 50px;
+    height: 40px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeleton-forecast {
+    display: flex;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.skeleton-fc-item {
+    flex: 0 0 100px;
+    height: 140px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, rgba(255,255,255,0.85) 25%, rgba(255,255,255,0.95) 50%, rgba(255,255,255,0.85) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* ---- 当前天气卡片 ---- */
+.current-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: var(--card-shadow);
+    transition: background var(--transition), box-shadow var(--transition);
+    animation: fadeIn 0.4s ease;
+}
+
+.current-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.current-icon { font-size: 2rem; }
+
+.current-temp {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.current-temp sup { font-size: 0.9rem; font-weight: 400; }
+
+.current-desc {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+}
+
+.current-details {
+    display: flex;
+    justify-content: center;
+    gap: 36px;
+}
+
+.detail { display: flex; flex-direction: column; }
+.detail-label { font-size: 0.78rem; color: var(--text-muted); }
+.detail-value { font-size: 1rem; font-weight: 600; color: var(--text-secondary); }
+
+/* ---- AQI 卡片 ---- */
+.aqi-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    box-shadow: var(--card-shadow);
+    transition: background var(--transition);
+    animation: fadeIn 0.4s ease;
+    text-align: center;
+}
+
+.aqi-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.aqi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.aqi-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 10px;
+}
+
+.aqi-details {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.aqi-details span { white-space: nowrap; }
+
+/* ---- 节标题 ---- */
+h2 {
+    color: white;
+    margin-bottom: 12px;
+    font-size: 1.15rem;
+    text-align: center;
+}
+.hourly-section { margin-bottom: 20px; }
+.hourly-section h2 { font-size: 1.05rem; margin-bottom: 10px; }
+
+/* ---- 逐时预报条 ---- */
+.hourly-strip {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 14px 6px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    box-shadow: var(--card-shadow);
+    transition: background var(--transition);
+}
+
+.hourly-item {
+    flex: 0 0 50px;
+    text-align: center;
+    border-right: 1px solid rgba(0,0,0,0.07);
+    padding: 2px 0;
+    scroll-snap-align: start;
+}
+
+.hourly-item:last-child { border-right: none; }
+
+.hourly-time {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.hourly-icon {
+    font-size: 1.25rem;
+    margin-bottom: 6px;
+    line-height: 1;
+}
+
+.hourly-temp {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ---- 7天预报网格 ---- */
+.forecast-grid {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+}
+
+.forecast-card {
+    flex: 0 0 100px;
+    background: var(--card-bg);
+    border-radius: var(--radius-sm);
+    padding: 12px 8px;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+    scroll-snap-align: start;
+    transition: background var(--transition);
+    animation: fadeIn 0.4s ease;
+}
+
+.forecast-date { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; white-space: nowrap; }
+.forecast-icon { font-size: 1.6rem; margin-bottom: 2px; }
+.forecast-desc { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px; }
+
+.forecast-temps {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.temp-high { font-weight: 700; color: #e74c3c; font-size: 0.9rem; }
+.temp-low { color: #3498db; font-size: 0.9rem; }
+.forecast-rain { font-size: 0.72rem; color: var(--text-muted); }
+
+/* ---- 加载 & 错误 ---- */
+.loading-box { text-align: center; color: white; padding: 40px; }
+.loading-box span { font-size: 2rem; }
+
+.error-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 40px 24px;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+}
+.error-card h2 { color: #e74c3c; }
+.error-card p { color: var(--text-muted); font-size: 0.9rem; }
+.error-card button {
+    margin-top: 14px; padding: 10px 28px;
+    border: none; border-radius: 22px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; font-size: 1rem; cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- 游戏区域 ---- */
+.game-section { margin-top: 24px; }
+.game-section h2 {
+    color: #fff;
+    font-size: 1.15rem;
+    margin-bottom: 4px;
+}
+
+.game-hint {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.game-wrapper {
+    background: rgba(255,255,255,0.95);
+    border-radius: var(--radius);
+    padding: 16px 12px;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+}
+
+#gameCanvas {
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto 10px;
+    max-width: 100%;
+    height: auto;
+    touch-action: none;
+}
+
+.game-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.game-scores {
+    display: flex;
+    gap: 14px;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.game-scores strong { color: #667eea; font-size: 1.05rem; }
+.game-scores .high-score strong { color: #f39c12; }
+
+.game-btn {
+    padding: 10px 28px;
+    border: none;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.game-btn:active { transform: scale(0.95); }
+
+/* ---- 页脚 ---- */
+.app-footer {
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.72rem;
+    margin-top: 24px;
+    padding-bottom: 16px;
+}
+
+/* ---- 响应式 ---- */
+@media (min-width: 640px) {
+    body { padding: 24px; }
+    .container { max-width: 700px; }
+    header h1 { font-size: 2rem; }
+    .current-icon { font-size: 3rem; }
+    .current-temp { font-size: 2.6rem; }
+    .forecast-card { flex: 0 0 110px; }
+    .forecast-icon { font-size: 2rem; }
+    .hourly-item { flex: 0 0 62px; }
+    .hourly-icon { font-size: 1.35rem; }
+}
+
+@media (min-width: 800px) {
+    .forecast-grid {
+        overflow-x: visible;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+    .hourly-strip {
+        overflow-x: visible;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(55px, 1fr));
+        gap: 0;
+    }
+    .hourly-item { flex: unset; }
+    .hourly-item:last-child { border-right: none; }
+    .forecast-card { flex: unset; }
+}
