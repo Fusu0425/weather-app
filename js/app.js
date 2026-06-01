@@ -36,7 +36,9 @@ var App = (function() {
         );
     }
 
-    // ---- 反向地理编码（Nominatim 免费 API） ----
+    // ---- 反向地理编码（Nominatim 免费 API，国内可能需梯子） ----
+    var GEO_CACHE = {};  // 缓存结果，减少重复请求
+
     function reverseGeocode(lat, lon, callback) {
         // 厦门附近直接返回，避免 API 请求
         if (Math.abs(lat - DEFAULT_CITY.lat) < 0.5 && Math.abs(lon - DEFAULT_CITY.lon) < 0.5) {
@@ -44,28 +46,48 @@ var App = (function() {
             return;
         }
 
+        // 查缓存
+        var key = lat.toFixed(3) + ',' + lon.toFixed(3);
+        if (GEO_CACHE[key]) {
+            callback(GEO_CACHE[key]);
+            return;
+        }
+
         var url = 'https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&accept-language=zh&zoom=10';
+
+        // 超时控制：3 秒内没响应就走兜底
+        var timedOut = false;
+        var timer = setTimeout(function() {
+            timedOut = true;
+            var fallback = '📍 当前定位';
+            GEO_CACHE[key] = fallback;
+            callback(fallback);
+        }, 3000);
 
         fetch(url, { headers: { 'User-Agent': 'XiamenWeatherApp/1.0' } })
             .then(function(r) { return r.json(); })
             .then(function(data) {
+                if (timedOut) return;
+                clearTimeout(timer);
+
+                var city = null;
                 if (data && data.address) {
                     var addr = data.address;
-                    // 优先取城市名，其次区县/乡镇
-                    var city = addr.city || addr.town || addr.county || addr.state || addr.village;
+                    city = addr.city || addr.town || addr.county || addr.state || addr.village;
                     if (city) {
-                        // 去掉"市"、"区"、"县"、"镇"等后缀，让显示更干净
                         city = city.replace(/[市区县镇乡]$/, '');
-                        callback(city);
-                        return;
                     }
                 }
-                // API 返回了但解析不到 → 用坐标
-                callback(lat.toFixed(2) + ',' + lon.toFixed(2));
+                city = city || '📍 当前定位';
+                GEO_CACHE[key] = city;
+                callback(city);
             })
             .catch(function() {
-                // 网络失败 → 用坐标兜底
-                callback(lat.toFixed(2) + ',' + lon.toFixed(2));
+                if (timedOut) return;
+                clearTimeout(timer);
+                var fallback = '📍 当前定位';
+                GEO_CACHE[key] = fallback;
+                callback(fallback);
             });
     }
 
