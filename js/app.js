@@ -36,15 +36,37 @@ var App = (function() {
         );
     }
 
-    // ---- 反向地理编码（使用 Open-Meteo 免费接口） ----
+    // ---- 反向地理编码（Nominatim 免费 API） ----
     function reverseGeocode(lat, lon, callback) {
-        // 简单判断：坐标在厦门范围内就用厦门
+        // 厦门附近直接返回，避免 API 请求
         if (Math.abs(lat - DEFAULT_CITY.lat) < 0.5 && Math.abs(lon - DEFAULT_CITY.lon) < 0.5) {
             callback(DEFAULT_CITY.name);
             return;
         }
-        // 否则用坐标表示
-        callback(lat.toFixed(2) + ',' + lon.toFixed(2));
+
+        var url = 'https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&accept-language=zh&zoom=10';
+
+        fetch(url, { headers: { 'User-Agent': 'XiamenWeatherApp/1.0' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.address) {
+                    var addr = data.address;
+                    // 优先取城市名，其次区县/乡镇
+                    var city = addr.city || addr.town || addr.county || addr.state || addr.village;
+                    if (city) {
+                        // 去掉"市"、"区"、"县"、"镇"等后缀，让显示更干净
+                        city = city.replace(/[市区县镇乡]$/, '');
+                        callback(city);
+                        return;
+                    }
+                }
+                // API 返回了但解析不到 → 用坐标
+                callback(lat.toFixed(2) + ',' + lon.toFixed(2));
+            })
+            .catch(function() {
+                // 网络失败 → 用坐标兜底
+                callback(lat.toFixed(2) + ',' + lon.toFixed(2));
+            });
     }
 
     // ---- 刷新倒计时 ----
