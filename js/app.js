@@ -36,59 +36,22 @@ var App = (function() {
         );
     }
 
-    // ---- 反向地理编码（Nominatim 免费 API，国内可能需梯子） ----
-    var GEO_CACHE = {};  // 缓存结果，减少重复请求
-
+    // ---- 反向地理编码（离线城市库，0 网络请求，国内可用） ----
     function reverseGeocode(lat, lon, callback) {
-        // 厦门附近直接返回，避免 API 请求
+        // 厦门附近直接返回
         if (Math.abs(lat - DEFAULT_CITY.lat) < 0.5 && Math.abs(lon - DEFAULT_CITY.lon) < 0.5) {
             callback(DEFAULT_CITY.name);
             return;
         }
 
-        // 查缓存
-        var key = lat.toFixed(3) + ',' + lon.toFixed(3);
-        if (GEO_CACHE[key]) {
-            callback(GEO_CACHE[key]);
-            return;
+        // 离线匹配最近城市
+        var city = findNearestCity(lat, lon);
+        if (city) {
+            callback(city);
+        } else {
+            // 非常偏远的地区 → 显示友好兜底
+            callback('📍 当前定位');
         }
-
-        var url = 'https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&accept-language=zh&zoom=10';
-
-        // 超时控制：3 秒内没响应就走兜底
-        var timedOut = false;
-        var timer = setTimeout(function() {
-            timedOut = true;
-            var fallback = '📍 当前定位';
-            GEO_CACHE[key] = fallback;
-            callback(fallback);
-        }, 3000);
-
-        fetch(url, { headers: { 'User-Agent': 'XiamenWeatherApp/1.0' } })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (timedOut) return;
-                clearTimeout(timer);
-
-                var city = null;
-                if (data && data.address) {
-                    var addr = data.address;
-                    city = addr.city || addr.town || addr.county || addr.state || addr.village;
-                    if (city) {
-                        city = city.replace(/[市区县镇乡]$/, '');
-                    }
-                }
-                city = city || '📍 当前定位';
-                GEO_CACHE[key] = city;
-                callback(city);
-            })
-            .catch(function() {
-                if (timedOut) return;
-                clearTimeout(timer);
-                var fallback = '📍 当前定位';
-                GEO_CACHE[key] = fallback;
-                callback(fallback);
-            });
     }
 
     // ---- 刷新倒计时 ----
