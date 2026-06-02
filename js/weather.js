@@ -155,6 +155,13 @@ var Weather = (function() {
 
     // ---- 渲染全部天气 ----
     function render(weatherData, aqiData) {
+        // 保存滚动位置（刷新时不丢失）
+        var savedScroll = {};
+        var prevForecast = document.querySelector('.forecast-grid');
+        var prevHourly = document.querySelector('.hourly-strip');
+        if (prevForecast) savedScroll.forecast = prevForecast.scrollLeft;
+        if (prevHourly) savedScroll.hourly = prevHourly.scrollLeft;
+
         var container = document.getElementById('weatherContent');
         if (!container) return;
 
@@ -195,11 +202,13 @@ var Weather = (function() {
 
         // === ② 未来 7 天预报 ===
         var daily = weatherData.daily;
-        html += '<h2 class="section-title">未来 7 天</h2><div class="forecast-grid">';
+        var todayStr = new Date().toISOString().slice(0, 10);
+        html += '<h2 class="section-title">未来 7 天</h2><div class="forecast-grid" id="forecastGrid">';
         for (var d = 0; d < daily.time.length; d++) {
             var dd = WEATHER_CODES[daily.weather_code[d]] || ['未知', '❓'];
             var shortDate = daily.time[d].slice(5).replace(/-/g, '/');
-            html += '<div class="forecast-card">'
+            var isToday = daily.time[d] === todayStr;
+            html += '<div class="forecast-card' + (isToday ? ' today' : '') + '">'
                 + '<div class="forecast-date">' + shortDate + '</div>'
                 + '<div class="forecast-icon">' + dd[1] + '</div>'
                 + '<div class="forecast-desc">' + dd[0] + '</div>'
@@ -214,7 +223,7 @@ var Weather = (function() {
 
         // === ③ 未来 24 小时 ===
         var hourly = weatherData.hourly;
-        html += '<h2 class="section-title">未来 24 小时</h2><div class="hourly-strip">';
+        html += '<h2 class="section-title">未来 24 小时</h2><div class="hourly-strip" id="hourlyStrip">';
         var hLen = Math.min(hourly.time.length, 24);
         for (var i = 0; i < hLen; i++) {
             var hc = WEATHER_CODES[hourly.weather_code[i]] || ['未知', '❓'];
@@ -288,6 +297,16 @@ var Weather = (function() {
         }
 
         container.innerHTML = html;
+
+        // 恢复滚动位置
+        if (savedScroll.forecast != null) {
+            var fg = document.querySelector('.forecast-grid');
+            if (fg) fg.scrollLeft = savedScroll.forecast;
+        }
+        if (savedScroll.hourly != null) {
+            var hs = document.querySelector('.hourly-strip');
+            if (hs) hs.scrollLeft = savedScroll.hourly;
+        }
     }
 
     // ---- 渲染错误 ----

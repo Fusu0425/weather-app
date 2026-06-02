@@ -279,11 +279,13 @@
         }
     }
 
-    // ---- 循环（每2帧更新一次 = 30fps逻辑） ----
+    // ---- 循环（页面隐藏时暂停） ----
     function loop() {
-        bgThrottle++;
-        if (bgThrottle % 2 === 0) update();
-        draw();
+        if (!document.hidden) {
+            bgThrottle++;
+            if (bgThrottle % 2 === 0) update();
+            draw();
+        }
         requestAnimationFrame(loop);
     }
 

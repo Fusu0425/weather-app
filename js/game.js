@@ -100,16 +100,24 @@ var Game = (function() {
         generateBuildings();
     }
 
-    // ---- 建筑生成 ----
-    function generateBuildings() {
-        buildings = [];
-        var bx = 0;
-        while (bx < W + 60) {
+    // ---- 建筑生成（预计算窗户状态，防闪烁） ----
+    function generateBuildings(keepExisting) {
+        if (!keepExisting) buildings = [];
+        var bx = buildings.length > 0 ? buildings[buildings.length - 1].x + buildings[buildings.length - 1].w + 2 * scale : 0;
+        while (bx < W + 120) {
             var bw = 18 * scale + Math.random() * 35 * scale;
             var bh = 25 * scale + Math.random() * 65 * scale;
             var wins = Math.floor(bw / (8 * scale));
-            buildings.push({ x: bx, w: bw, h: bh, wins: wins });
+            var litWindows = [];
+            for (var wi = 0; wi < wins; wi++) {
+                litWindows.push(Math.random() < 0.55);
+            }
+            buildings.push({ x: bx, w: bw, h: bh, wins: wins, lit: litWindows });
             bx += bw + 2 * scale;
+        }
+        // 剪枝：移除左侧完全离屏的建筑
+        while (buildings.length > 0 && buildings[0].x + buildings[0].w < -20) {
+            buildings.shift();
         }
     }
 
@@ -351,8 +359,14 @@ var Game = (function() {
         ctx.fillStyle = gndGrad;
         ctx.fillRect(0, groundY, W, H - groundY);
 
-        // 城市剪影
-        if (buildings.length === 0 || buildings[buildings.length - 1].x > W + 60) generateBuildings();
+        // 城市剪影（增量生成 + 预计算窗户，不闪烁）
+        if (buildings.length === 0 || buildings[buildings.length - 1].x < W + 100) {
+            generateBuildings(true);
+        }
+        // 剪枝：移除完全离屏的建筑
+        while (buildings.length > 0 && buildings[0].x + buildings[0].w < -20) {
+            buildings.shift();
+        }
         ctx.fillStyle = '#0d1118';
         for (var b = 0; b < buildings.length; b++) {
             var bd = buildings[b];
@@ -360,11 +374,11 @@ var Game = (function() {
             ctx.fillRect(bd.x, groundY - bd.h, bd.w, bd.h);
             if (bd.wins > 0 && bd.h > 25 * scale) {
                 for (var wi = 0; wi < bd.wins; wi++) {
-                    if (Math.random() < 0.55) {
+                    if (bd.lit[wi]) {
                         var wx = bd.x + 3 * scale + wi * (bd.w / bd.wins);
                         var wy = groundY - bd.h + 8 * scale + (wi % 2) * 14 * scale;
                         ctx.fillStyle = (wi % 3 === 0) ? '#ffe9a0' : '#fddc7a';
-                        ctx.globalAlpha = 0.5 + Math.random() * 0.4;
+                        ctx.globalAlpha = 0.7;
                         ctx.fillRect(wx, wy, 2.5 * scale, 3.5 * scale);
                     }
                 }
@@ -608,10 +622,12 @@ var Game = (function() {
         }
     }
 
-    // ---- 游戏循环 ----
+    // ---- 游戏循环（页面隐藏时暂停） ----
     function loop() {
-        update();
-        draw();
+        if (!document.hidden) {
+            update();
+            draw();
+        }
         requestAnimationFrame(loop);
     }
 
