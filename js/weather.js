@@ -322,6 +322,39 @@ var Weather = (function() {
             });
     }
 
+    // ---- 按城市名加载（Open-Meteo 地理编码） ----
+    function loadByName(name) {
+        var url = API.geocoding + '?name=' + encodeURIComponent(name) + '&count=1&language=zh';
+        fetch(url)
+            .then(function(res) {
+                if (!res.ok) throw new Error('地理编码请求失败');
+                return res.json();
+            })
+            .then(function(data) {
+                if (!data.results || data.results.length === 0) {
+                    renderError('未找到"' + name + '"的坐标，请尝试其他城市名');
+                    return;
+                }
+                var r = data.results[0];
+                var resolvedName = r.name || name;
+                if (r.admin1 && r.admin1 !== resolvedName) {
+                    resolvedName = resolvedName + '，' + r.admin1;
+                }
+                setCity(resolvedName);
+                // 更新 header 显示
+                var cityEl = document.getElementById('cityName');
+                if (cityEl) cityEl.textContent = resolvedName;
+                // 通知 App 更新城市
+                if (window.App && App.updateCityDisplay) {
+                    App.updateCityDisplay(resolvedName);
+                }
+                load(r.latitude, r.longitude);
+            })
+            .catch(function(err) {
+                renderError('搜索城市失败：' + (err.message || '网络连接失败，请检查网络后重试'));
+            });
+    }
+
     // ---- 更新城市名 ----
     function setCity(name) {
         if (name) cityName = name;
@@ -337,6 +370,7 @@ var Weather = (function() {
         load: load,
         setCity: setCity,
         getCoords: getCoords,
+        loadByName: loadByName,
         refresh: function() { load(); }
     };
 

@@ -711,3 +711,178 @@ h2 {
     .hourly-item:last-child { border-right: none; }
     .forecast-card { flex: unset; }
 }
+
+/* ============================================
+   城市选择器
+   ============================================ */
+
+/* 城市名按钮 */
+.city-name-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 10px;
+    transition: background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.city-name-btn:hover { background: rgba(255,255,255,0.15); }
+.city-name-btn:active { background: rgba(255,255,255,0.25); }
+.city-name-btn h1 {
+    margin: 0;
+    font-size: inherit;
+    letter-spacing: inherit;
+    font-weight: inherit;
+}
+.city-caret {
+    font-size: 0.65em;
+    opacity: 0.7;
+    transition: transform 0.25s ease;
+    display: inline-block;
+}
+.city-name-btn.open .city-caret { transform: rotate(180deg); }
+
+/* 遮罩层 */
+.city-selector-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0,0,0,0);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: max(60px, env(safe-area-inset-top));
+    pointer-events: none;
+    transition: background 0.25s ease;
+}
+.city-selector-overlay.open {
+    background: rgba(0,0,0,0.45);
+    pointer-events: auto;
+}
+
+/* 面板卡片 */
+.city-selector-panel {
+    width: 90%;
+    max-width: 420px;
+    max-height: 70vh;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    overflow: hidden;
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    display: flex;
+    flex-direction: column;
+}
+.city-selector-overlay.open .city-selector-panel {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+/* 搜索栏 */
+.cs-search-wrap {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    gap: 10px;
+    flex-shrink: 0;
+}
+.cs-search-input {
+    flex: 1;
+    border: none;
+    background: rgba(0,0,0,0.05);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 16px;           /* >=16px 防 iOS 聚焦缩放 */
+    color: var(--text-primary);
+    outline: none;
+    min-width: 0;
+}
+.cs-search-input::placeholder { color: var(--text-muted); }
+.cs-search-clear {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    line-height: 1;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 分区标签 */
+.cs-section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 12px 16px 4px;
+    letter-spacing: 1px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+/* 城市列表 */
+.cs-city-list {
+    list-style: none;
+    overflow-y: auto;
+    flex: 1;
+    padding: 0;
+    margin: 0;
+    -webkit-overflow-scrolling: touch;
+}
+.cs-city-list li {
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    -webkit-tap-highlight-color: transparent;
+}
+.cs-city-list li:active { background: rgba(0,0,0,0.06); }
+.cs-city-list li .cs-city-icon { font-size: 18px; flex-shrink: 0; }
+.cs-city-list li .cs-city-name { flex: 1; }
+.cs-city-list li .cs-city-badge {
+    font-size: 10px;
+    background: var(--bg-start, #667eea);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+/* 空状态 */
+.cs-empty {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* 暗色模式适配 */
+:root.dark-mode .cs-search-wrap { border-color: rgba(255,255,255,0.1); }
+:root.dark-mode .cs-search-input { background: rgba(255,255,255,0.08); color: #e0e0e0; }
+:root.dark-mode .cs-search-clear { color: #999; }
+:root.dark-mode .cs-section-label { color: #999; }
+:root.dark-mode .cs-city-list li { border-color: rgba(255,255,255,0.06); color: #e0e0e0; }
+:root.dark-mode .cs-city-list li:active { background: rgba(255,255,255,0.08); }
+:root.dark-mode .cs-empty { color: #999; }
+
+@media (prefers-color-scheme: dark) {
+    :root:not(.light-mode) .cs-search-wrap { border-color: rgba(255,255,255,0.1); }
+    :root:not(.light-mode) .cs-search-input { background: rgba(255,255,255,0.08); color: #e0e0e0; }
+    :root:not(.light-mode) .cs-search-clear { color: #999; }
+    :root:not(.light-mode) .cs-section-label { color: #999; }
+    :root:not(.light-mode) .cs-city-list li { border-color: rgba(255,255,255,0.06); color: #e0e0e0; }
+    :root:not(.light-mode) .cs-city-list li:active { background: rgba(255,255,255,0.08); }
+    :root:not(.light-mode) .cs-empty { color: #999; }
+}

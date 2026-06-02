@@ -12,7 +12,8 @@ var DEFAULT_CITY = {
 // ---- Open-Meteo API 端点 ----
 var API = {
     weather: 'https://api.open-meteo.com/v1/forecast',
-    airQuality: 'https://air-quality-api.open-meteo.com/v1/air-quality'
+    airQuality: 'https://air-quality-api.open-meteo.com/v1/air-quality',
+    geocoding: 'https://geocoding-api.open-meteo.com/v1/search'
 };
 
 // ---- 天气代码映射表 ----
@@ -302,6 +303,32 @@ function findNearestCity(lat, lon) {
     }
     // 距离超过 80km 说明不在已知城市范围内
     return bestDist < 80 ? bestCity : null;
+}
+
+// ---- 最近城市存储 ----
+var RECENT_CITIES_KEY = 'weather_recent_cities';
+var MAX_RECENT_CITIES = 5;
+
+// ---- 搜索城市（离线，大小写不敏感模糊匹配） ----
+function searchCities(query) {
+    var q = query.trim().toLowerCase();
+    if (!q) return [];
+    var results = [];
+    for (var i = 0; i < CITY_DB.length; i++) {
+        if (CITY_DB[i][0].toLowerCase().indexOf(q) !== -1) {
+            results.push(CITY_DB[i][0]);
+        }
+    }
+    // 去重保持顺序
+    var seen = {};
+    var unique = [];
+    for (var j = 0; j < results.length; j++) {
+        if (!seen[results[j]]) {
+            seen[results[j]] = true;
+            unique.push(results[j]);
+        }
+    }
+    return unique;
 }
 
 // ---- 自动刷新间隔 (毫秒) ----
