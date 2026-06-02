@@ -202,13 +202,11 @@ var Weather = (function() {
 
         // === ② 未来 7 天预报 ===
         var daily = weatherData.daily;
-        var todayStr = new Date().toISOString().slice(0, 10);
-        html += '<h2 class="section-title">未来 7 天</h2><div class="forecast-grid" id="forecastGrid">';
+        html += '<h2 class="section-title">未来 7 天</h2><div class="forecast-grid">';
         for (var d = 0; d < daily.time.length; d++) {
             var dd = WEATHER_CODES[daily.weather_code[d]] || ['未知', '❓'];
             var shortDate = daily.time[d].slice(5).replace(/-/g, '/');
-            var isToday = daily.time[d] === todayStr;
-            html += '<div class="forecast-card' + (isToday ? ' today' : '') + '">'
+            html += '<div class="forecast-card">'
                 + '<div class="forecast-date">' + shortDate + '</div>'
                 + '<div class="forecast-icon">' + dd[1] + '</div>'
                 + '<div class="forecast-desc">' + dd[0] + '</div>'

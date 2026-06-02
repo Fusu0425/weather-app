@@ -577,13 +577,8 @@ h2 {
     text-align: center;
     box-shadow: var(--card-shadow);
     scroll-snap-align: start;
-    transition: background var(--transition), border-color var(--transition);
+    transition: background var(--transition);
     animation: fadeIn 0.4s ease;
-    border: 2px solid transparent;
-}
-.forecast-card.today {
-    border-color: var(--bg-start, #667eea);
-    background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.05));
 }
 
 .forecast-date { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; white-space: nowrap; }
