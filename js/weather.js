@@ -7,6 +7,16 @@ var Weather = (function() {
     var currentLat = DEFAULT_CITY.lat;
     var currentLon = DEFAULT_CITY.lon;
     var cityName = DEFAULT_CITY.name;
+    var lastWeather = null;   // 上次成功数据，秒显用
+    var lastAqi = null;
+
+    // ---- 带超时的 fetch ----
+    function fetchWithTimeout(promise, ms) {
+        var timeout = new Promise(function(_, reject) {
+            setTimeout(function() { reject(new Error('请求超时')); }, ms);
+        });
+        return Promise.race([promise, timeout]);
+    }
 
     // ---- 工具函数 ----
     function formatDate(d) {
@@ -253,7 +263,7 @@ var Weather = (function() {
         if (aqiData && aqiData.current) {
             var aq = aqiData.current;
             var lvl = getAQILevel(aq.european_aqi || 0);
-            html += '<div class="aqi-card">'
+            html += '<div class="aqi-card" id="aqiCard">'
                 + '<div class="aqi-header"><span class="aqi-header-icon">🌬️</span> 空气质量</div>'
                 + '<div class="aqi-body">'
                 + '<div class="aqi-value-wrap">'
@@ -291,35 +301,89 @@ var Weather = (function() {
             + '</div>';
     }
 
-    // ---- 主加载函数 ----
+    // ---- 主加载函数（天气先渲染，AQI 后台补位） ----
     function load(lat, lon) {
         if (lat) { currentLat = lat; currentLon = lon; }
 
-        var weatherPromise = fetchWeather(currentLat, currentLon);
-        var aqiPromise = fetchAQI(currentLat, currentLon).catch(function() { return null; });
+        // 有缓存数据 → 先秒显，避免白屏等待
+        if (lastWeather) {
+            render(lastWeather, lastAqi || null);
+        }
 
-        Promise.all([weatherPromise, aqiPromise])
-            .then(function(results) {
-                var weatherData = results[0];
-                var aqiData = results[1];
+        // 天气 fetch（8 秒超时）
+        var weatherPromise = fetchWithTimeout(fetchWeather(currentLat, currentLon), 8000);
 
-                document.getElementById('updateTime').textContent = formatDate(new Date());
+        weatherPromise.then(function(weatherData) {
+            lastWeather = weatherData;
 
-                // 背景特效
-                if (window.setBgEffect) {
-                    window.setBgEffect(weatherData.current.weather_code);
-                }
+            document.getElementById('updateTime').textContent = formatDate(new Date());
 
-                // 主题色
-                var theme = getThemeColors(weatherData.current.weather_code);
-                document.body.style.setProperty('--bg-start', theme[0]);
-                document.body.style.setProperty('--bg-end', theme[1]);
+            // 背景特效
+            if (window.setBgEffect) {
+                window.setBgEffect(weatherData.current.weather_code);
+            }
 
-                render(weatherData, aqiData);
-            })
-            .catch(function(err) {
-                renderError(err.message || '网络连接失败，请检查网络后重试');
+            // 主题色
+            var theme = getThemeColors(weatherData.current.weather_code);
+            document.body.style.setProperty('--bg-start', theme[0]);
+            document.body.style.setProperty('--bg-end', theme[1]);
+
+            // 立即渲染天气（AQI 可能已有缓存，否则显示为空）
+            render(weatherData, lastAqi || null);
+
+            // AQI 后台静默加载
+            fetchAQI(currentLat, currentLon).then(function(aqiData) {
+                lastAqi = aqiData;
+                updateAQISection(aqiData);
+            }).catch(function() {
+                // AQI 失败 → 静默，不影响天气显示
             });
+        }).catch(function(err) {
+            // 网络失败 → 有缓存就不报错，缓存都没有才报错
+            if (!lastWeather) {
+                renderError(err.message || '网络连接失败，请检查网络后重试');
+            }
+        });
+    }
+
+    // ---- 单独更新 AQI 区域（不重刷整个页面） ----
+    function updateAQISection(aqiData) {
+        if (!aqiData || !aqiData.current) return;
+        var aq = aqiData.current;
+        var lvl = getAQILevel(aq.european_aqi || 0);
+
+        var html = '<div class="aqi-card" id="aqiCard">'
+            + '<div class="aqi-header"><span class="aqi-header-icon">🌬️</span> 空气质量</div>'
+            + '<div class="aqi-body">'
+            + '<div class="aqi-value-wrap">'
+            + '<span class="aqi-value" style="color:' + lvl.color + '">' + Math.round(aq.european_aqi || 0) + '</span>'
+            + '<span class="aqi-badge" style="background:' + lvl.color + ';color:#fff">' + lvl.label + '</span>'
+            + '</div>'
+            + '<div class="aqi-details">'
+            + '<span>PM2.5 ' + (aq.pm2_5 != null ? Math.round(aq.pm2_5) + ' <b>µg/m³</b>' : '--') + '</span>'
+            + '<span>PM10 ' + (aq.pm10 != null ? Math.round(aq.pm10) + ' <b>µg/m³</b>' : '--') + '</span>'
+            + '</div>'
+            + '</div>'
+            + '<div class="aqi-legend">'
+            + '<span class="aqi-legend-item"><i style="background:#00b800"></i>优 0-50</span>'
+            + '<span class="aqi-legend-item"><i style="background:#c8a000"></i>良 51-100</span>'
+            + '<span class="aqi-legend-item"><i style="background:#e07000"></i>轻度 101-150</span>'
+            + '<span class="aqi-legend-item"><i style="background:#d00000"></i>中度 151-200</span>'
+            + '<span class="aqi-legend-item"><i style="background:#99004c"></i>重度 201-300</span>'
+            + '<span class="aqi-legend-item"><i style="background:#7e0023"></i>严重 301+</span>'
+            + '</div>'
+            + '</div>';
+
+        // 替换已有的 AQI 卡片，或追加到 weatherContent 末尾
+        var existing = document.getElementById('aqiCard');
+        if (existing) {
+            existing.outerHTML = html;
+        } else {
+            var content = document.getElementById('weatherContent');
+            if (content) {
+                content.insertAdjacentHTML('beforeend', html);
+            }
+        }
     }
 
     // ---- 按城市名加载（Open-Meteo 地理编码） ----

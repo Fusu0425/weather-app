@@ -469,9 +469,22 @@ var App = (function() {
         bindUI();
         registerSW();
 
-        // 首次加载
-        loadWithLocation();
+        // 秒开：先用默认城市（厦门）加载天气，不等待 GPS
+        Weather.load(DEFAULT_CITY.lat, DEFAULT_CITY.lon);
         scheduleRefresh();
+
+        // GPS 后台静默定位，如果位置不同则自动切换
+        getLocation(function(lat, lon, city) {
+            var newCity = city || DEFAULT_CITY.name;
+            // 只有与默认城市不同时才重新加载
+            if (newCity !== DEFAULT_CITY.name) {
+                currentCity = newCity;
+                Weather.setCity(currentCity);
+                Weather.load(lat, lon);
+                document.getElementById('cityName').textContent = currentCity;
+                csSyncRecent(currentCity);
+            }
+        });
 
         // 定时刷新
         refreshTimer = setInterval(function() {
