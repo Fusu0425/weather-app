@@ -325,6 +325,10 @@ var Weather = (function() {
         // 有缓存数据 → 先秒显，避免白屏等待
         if (lastWeather) {
             render(lastWeather, lastAqi || null);
+            // 缓存页也更新小猫
+            if (window.CatPet && CatPet.setWeather) {
+                CatPet.setWeather(lastWeather.current.weather_code);
+            }
         }
 
         // 天气 fetch（8 秒超时）
@@ -344,6 +348,11 @@ var Weather = (function() {
             var theme = getThemeColors(weatherData.current.weather_code);
             document.body.style.setProperty('--bg-start', theme[0]);
             document.body.style.setProperty('--bg-end', theme[1]);
+
+            // 更新小猫桌宠
+            if (window.CatPet && CatPet.setWeather) {
+                CatPet.setWeather(weatherData.current.weather_code);
+            }
 
             // 立即渲染天气（AQI 可能已有缓存，否则显示为空）
             render(weatherData, lastAqi || null);
