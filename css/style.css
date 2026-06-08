@@ -1500,6 +1500,61 @@ h2 {
     100% { opacity: 0; transform: translateY(-75px) scale(0.7) rotate(-25deg); }
 }
 
+/* ---- 响应式：手机端缩小 ---- */
+@media (max-width: 639px) {
+    .cat-body-wrap      { width: 66px; height: 84px; }
+    .cat-shadow          { width: 42px; height: 8px; bottom: 2px; }
+    .cat-body            { width: 52px; height: 38px; bottom: 14px; }
+    .cat-body::after     { width: 34px; height: 22px; }
+    .cat-face            { width: 48px; height: 44px; top: 6px; }
+    .cat-ear             { width: 16px; height: 13px; }
+    .cat-ear::after      { width: 8px; height: 6px; }
+    .cat-ear-l           { left: 5px; }
+    .cat-ear-r           { right: 5px; }
+    .cat-eye             { width: 14px; height: 16px; top: 16px; }
+    .cat-eye-l           { left: 7px; }
+    .cat-eye-r           { right: 7px; }
+    .cat-iris            { width: 11px; height: 13px; }
+    .cat-pupil           { width: 6px; height: 7px; }
+    .cat-glint-1         { width: 4px; height: 4px; }
+    .cat-glint-2         { width: 2px; height: 2px; }
+    .cat-nose            { width: 6px; height: 4px; top: 25px; }
+    .cat-mouth           { top: 30px; width: 12px; height: 5px; }
+    .cat-mouth::before,
+    .cat-mouth::after    { width: 7px; height: 4px; border-bottom-width: 1px; }
+    .cat-blush           { width: 7px; height: 4px; top: 24px; }
+    .cat-blush-l         { left: 2px; }
+    .cat-blush-r         { right: 2px; }
+    .cat-whiskers        { top: 24px; }
+    .cat-whiskers-l      { left: -12px; }
+    .cat-whiskers-r      { right: -12px; }
+    .cat-whiskers i      { width: 12px; height: 0.8px; }
+    .cat-collar          { top: 46px; width: 28px; height: 6px; }
+    .cat-bell            { width: 8px; height: 8px; top: 4px; }
+    .cat-bell::after     { width: 2px; height: 2px; }
+    .cat-paws            { width: 36px; bottom: 10px; }
+    .cat-paw             { width: 13px; height: 10px; }
+    .cat-tail            { width: 22px; height: 9px; bottom: 22px; left: -10px; }
+    .cat-tail::after     { width: 11px; height: 11px; }
+    .cat-face.scared .cat-eye { width: 16px; height: 18px; }
+    .cat-face.scared .cat-eye-l { left: 6px; }
+    .cat-face.scared .cat-eye-r { right: 6px; }
+    .cat-face.scared .cat-iris { width: 13px; height: 15px; }
+    .cat-face.scared .cat-pupil { width: 8px; height: 9px; }
+
+    /* 气泡适配 */
+    .cat-speech {
+        font-size: 10px !important;
+        padding: 5px 9px;
+        border-radius: 10px;
+        max-width: 130px;
+        white-space: normal;
+        word-break: break-all;
+        line-height: 1.3;
+        margin-bottom: 8px;
+    }
+}
+
 /* ---- 响应式放大 ---- */
 @media (min-width: 640px) {
     .cat-body-wrap      { width: 110px; height: 140px; }

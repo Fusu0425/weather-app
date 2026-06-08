@@ -16,6 +16,7 @@ var CatPet = (function() {
     var idleTimer = null;
     var actionTimer = null;
     var heartPool = [];
+    var isMobile = false;
 
     var dom = {};
 
@@ -119,6 +120,10 @@ var CatPet = (function() {
 
     // ---- 位置初始化 ----
     function initPosition() {
+        isMobile = window.innerWidth < 640;
+        var pw = isMobile ? 66 : 90;
+        var ph = isMobile ? 84 : 115;
+
         var saved = null;
         try {
             var raw = localStorage.getItem('catpet_pos');
@@ -127,15 +132,17 @@ var CatPet = (function() {
 
         var vw = window.innerWidth;
         var vh = window.innerHeight;
-        var pw = 90, ph = 115;
+        // 手机端考虑安全区域和底部导航栏
+        var bottomMargin = isMobile ? 80 : 130;
+        var rightMargin = isMobile ? 8 : 14;
 
         if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
             pos.x = Math.max(0, Math.min(saved.x, vw - pw));
             pos.y = Math.max(0, Math.min(saved.y, vh - ph));
         } else {
             // 默认右下角
-            pos.x = vw - pw - 14;
-            pos.y = vh - ph - 130;
+            pos.x = vw - pw - rightMargin;
+            pos.y = vh - ph - bottomMargin;
         }
         applyPos(false);
     }
@@ -147,11 +154,19 @@ var CatPet = (function() {
         } else {
             dom.pet.style.transition = t;
         }
+        // 手机端用更短的过渡时间，触感更好
+        if (isMobile && animate !== false) {
+            dom.pet.style.transition = 'left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        }
         dom.pet.style.left = pos.x + 'px';
         dom.pet.style.top  = pos.y + 'px';
         if (animate === false) {
             dom.pet.offsetHeight;
-            dom.pet.style.transition = t;
+            if (isMobile) {
+                dom.pet.style.transition = 'left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            } else {
+                dom.pet.style.transition = t;
+            }
         }
     }
 
@@ -214,9 +229,10 @@ var CatPet = (function() {
     function clampPos() {
         var vw = window.innerWidth;
         var vh = window.innerHeight;
-        var pw = 90, ph = 115;
-        pos.x = Math.max(-24, Math.min(pos.x, vw - pw + 24));
-        pos.y = Math.max(-14, Math.min(pos.y, vh - ph + 14));
+        var pw = isMobile ? 66 : 90;
+        var ph = isMobile ? 84 : 115;
+        pos.x = Math.max(-18, Math.min(pos.x, vw - pw + 18));
+        pos.y = Math.max(-10, Math.min(pos.y, vh - ph + 10));
     }
 
     // ---- 互动 ----
@@ -294,9 +310,15 @@ var CatPet = (function() {
         dom.body.classList.remove('shaking');
         dom.pet.classList.remove('thunder-mode');
 
+        // 手机端饰品缩小
+        var scale = isMobile ? 0.7 : 1;
+        var emojiStyle = function(size, top) {
+            return 'font-size:' + Math.round(size * scale) + 'px;top:' + Math.round(top * scale) + 'px;';
+        };
+
         switch (weatherCat) {
             case 'sunny':
-                acc.innerHTML = '<span class="cat-acc-emoji" style="font-size:24px;top:0;">😎</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(24, 0) + '">😎</span>';
                 break;
             case 'partly':
                 acc.innerHTML = '';
@@ -306,22 +328,22 @@ var CatPet = (function() {
                 acc.innerHTML = '';
                 break;
             case 'fog':
-                acc.innerHTML = '<span class="cat-acc-emoji" style="font-size:20px;top:18px;">🧣</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(20, 18) + '">🧣</span>';
                 break;
             case 'drizzle':
-                acc.innerHTML = '<span class="cat-acc-emoji" style="font-size:18px;top:2px;">🧢</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(18, 2) + '">🧢</span>';
                 break;
             case 'rain':
-                acc.innerHTML = '<span class="cat-acc-emoji" style="font-size:22px;top:-6px;">☂️</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(22, -6) + '">☂️</span>';
                 break;
             case 'snow':
-                acc.innerHTML = '<span class="cat-acc-emoji" style="font-size:24px;top:-8px;">🎩</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(24, -8) + '">🎩</span>';
                 break;
             case 'thunder':
                 dom.face.classList.add('scared');
                 dom.body.classList.add('shaking');
                 dom.pet.classList.add('thunder-mode');
-                acc.innerHTML = '<span class="cat-acc-emoji" style="font-size:18px;top:0;">⚡</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(18, 0) + '">⚡</span>';
                 break;
             default:
                 acc.innerHTML = '';
@@ -349,9 +371,21 @@ var CatPet = (function() {
 
     // ---- 窗口大小变化处理 ----
     function onResize() {
-        clampPos();
+        // 手机端：检测是否从桌面切换到手机（横屏等）
+        var wasMobile = isMobile;
+        isMobile = window.innerWidth < 640;
+        // 如果设备类型变了，更新所有配件尺寸
+        if (wasMobile !== isMobile) {
+            // 设备类型变了，重新计算位置
+            clampPos();
+        } else {
+            clampPos();
+        }
         applyPos(false);
-        savePosition();
+        // 手机端不保存 resize 产生的位置（避免地址栏收起导致位置偏移保存）
+        if (!isMobile) {
+            savePosition();
+        }
     }
 
     // ---- 公开方法 ----
