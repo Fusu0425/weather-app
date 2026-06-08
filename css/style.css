@@ -1020,9 +1020,9 @@ h2 {
 }
 
 /* ---- 歪头 ---- */
-.cat-pet.tilt-head .cat-head-svg {
+.cat-pet.tilt-head #catHeadEl {
     animation: headTilt 0.8s ease;
-    transform-origin: 100px 88px;
+    transform-origin: 100px 98px;
 }
 @keyframes headTilt {
     0%, 100% { transform: rotate(0); }
