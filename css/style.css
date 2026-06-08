@@ -940,7 +940,7 @@ h2 {
 }
 
 /* ============================================
-   天气小猫桌宠 — 白灰胖猫 · 圆润可爱
+   天气小猫桌宠 — SVG 萌猫 · 大头大眼
    ============================================ */
 
 /* ---- 容器 ---- */
@@ -961,453 +961,116 @@ h2 {
     z-index: 10000;
     transition: none !important;
 }
-.cat-pet.dragging .cat-body-wrap { animation: none; }
+.cat-pet.dragging .cat-svg-wrap {
+    animation: none;
+}
 
-/* 弹跳 */
-.cat-pet.bouncing .cat-body-wrap {
+/* ---- SVG 画布 ---- */
+.cat-svg-wrap {
+    width: 100px;
+    height: 120px;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.12));
+    animation: catBreathe 4s ease-in-out infinite;
+}
+.cat-svg-wrap .cat-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 呼吸动画 */
+@keyframes catBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.025, 0.98); }
+}
+
+/* ---- 弹跳 ---- */
+.cat-pet.bouncing .cat-svg-wrap {
     animation: catBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes catBounce {
     0%   { transform: translateY(0) scale(1); }
-    25%  { transform: translateY(-28px) scale(0.96, 1.04); }
-    50%  { transform: translateY(0) scale(1.02, 0.98); }
-    70%  { transform: translateY(-10px) scale(0.99, 1.01); }
+    25%  { transform: translateY(-24px) scale(0.94, 1.06); }
+    50%  { transform: translateY(0) scale(1.03, 0.97); }
+    70%  { transform: translateY(-8px) scale(0.98, 1.02); }
     100% { transform: translateY(0) scale(1); }
 }
 
-/* 呼吸动画 */
-.cat-body-wrap {
-    position: relative;
-    width: 90px;
-    height: 115px;
-    animation: catBreathe 4s ease-in-out infinite;
-    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.13));
+/* ---- 表情：开心（眯眼） ---- */
+.cat-pet.happy-face .cat-eyes-svg {
+    animation: eyesHappy 0.6s ease forwards;
 }
-@keyframes catBreathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.03, 0.98); }
+@keyframes eyesHappy {
+    0%   { transform: scaleY(1); }
+    40%  { transform: scaleY(0.08); }
+    70%  { transform: scaleY(0.15); }
+    100% { transform: scaleY(1); }
 }
 
-/* ---- 阴影（地面） ---- */
-.cat-shadow {
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 56px;
-    height: 10px;
-    background: rgba(0,0,0,0.08);
-    border-radius: 50%;
-    z-index: -2;
-    animation: shadowPulse 4s ease-in-out infinite;
-}
-@keyframes shadowPulse {
-    0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.7; }
-    50% { transform: translateX(-50%) scale(0.85); opacity: 0.5; }
+/* ---- 表情：困倦 ---- */
+.cat-pet.sleepy-face .cat-eyes-svg {
+    transform: scaleY(0.35);
+    transition: transform 0.4s ease;
 }
 
-/* ---- 身体（胖圆） ---- */
-.cat-body {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 70px;
-    height: 50px;
-    background: linear-gradient(180deg,
-        #FAF8F5 0%,
-        #F0EBE4 35%,
-        #E8E3DB 70%,
-        #F2EEE8 100%
-    );
-    border-radius: 50%;
-    z-index: 0;
-    box-shadow:
-        inset 0 -8px 16px rgba(0,0,0,0.04),
-        0 1px 3px rgba(0,0,0,0.04);
+/* ---- 表情：惊吓（大眼 + 虹膜缩小） ---- */
+.cat-pet.scared-face .cat-eyes-svg {
+    transform: scale(1.2);
+    transition: transform 0.2s ease;
 }
 
-/* 肚皮（浅色区域） */
-.cat-body::after {
-    content: '';
-    position: absolute;
-    bottom: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 44px;
-    height: 28px;
-    background: radial-gradient(ellipse at 50% 50%, #FFFEFA 0%, rgba(255,254,250,0) 70%);
-    border-radius: 50%;
+/* ---- 歪头 ---- */
+.cat-pet.tilt-head .cat-head-svg {
+    animation: headTilt 0.8s ease;
+    transform-origin: 100px 88px;
+}
+@keyframes headTilt {
+    0%, 100% { transform: rotate(0); }
+    30%  { transform: rotate(14deg); }
+    60%  { transform: rotate(-6deg); }
+    80%  { transform: rotate(3deg); }
 }
 
-/* ---- 脸（大圆脸） ---- */
-.cat-face {
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 64px;
-    height: 58px;
-    background: radial-gradient(ellipse at 50% 35%, #FEFCF9 0%, #F2EDE7 100%);
-    border-radius: 50%;
-    z-index: 2;
-    box-shadow:
-        0 3px 12px rgba(0,0,0,0.07),
-        inset 0 -5px 10px rgba(0,0,0,0.03);
-    transition: transform 0.25s ease;
-}
-
-/* 额头灰色花纹 */
-.cat-face::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 32px;
-    height: 18px;
-    background: rgba(180,175,168,0.2);
-    border-radius: 50%;
-}
-
-/* ---- 耳朵 ---- */
-.cat-ear {
-    position: absolute;
-    top: 0;
-    width: 20px;
-    height: 16px;
-    background: linear-gradient(180deg, #EDE8E2 0%, #E0DAD2 100%);
-    border-radius: 60% 60% 30% 30%;
-    z-index: 1;
-}
-.cat-ear::after {
-    content: '';
-    position: absolute;
-    bottom: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 10px;
-    height: 8px;
-    background: #ECC8C8;
-    border-radius: 40% 40% 30% 30%;
-    opacity: 0.7;
-}
-.cat-ear-l { left: 8px;  transform: rotate(-8deg);  }
-.cat-ear-r { right: 8px; transform: rotate(8deg); }
-
-/* 耳朵抖动 */
-.cat-body-wrap:active .cat-ear-l,
-.dragging .cat-ear-l { transform: rotate(-22deg); }
-.cat-body-wrap:active .cat-ear-r,
-.dragging .cat-ear-r { transform: rotate(22deg); }
-
-/* ---- 眼睛（大眼 + 蓝灰虹膜 + 双高光） ---- */
-.cat-eye {
-    position: absolute;
-    top: 21px;
-    width: 20px;
-    height: 22px;
-    background: #FFF;
-    border-radius: 50%;
-    overflow: hidden;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
-    z-index: 3;
-    transition: height 0.25s ease, width 0.25s ease;
-}
-.cat-eye-l { left: 8px; }
-.cat-eye-r { right: 8px; }
-
-/* 虹膜 */
-.cat-iris {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 16px;
-    height: 18px;
-    background: radial-gradient(circle at 40% 30%, #B8D8EA 0%, #8AB5CC 60%, #5E8FA8 100%);
-    border-radius: 50%;
-    z-index: 1;
-}
-
-/* 瞳孔 */
-.cat-pupil {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 9px;
-    height: 10px;
-    background: radial-gradient(circle, #1A1210 60%, #0D0A08 100%);
-    border-radius: 50%;
-    z-index: 2;
-}
-
-/* 高光 1（大的） */
-.cat-glint-1 {
-    position: absolute;
-    top: 1px;
-    right: 3px;
-    width: 6px;
-    height: 6px;
-    background: #FFF;
-    border-radius: 50%;
-    z-index: 3;
-}
-
-/* 高光 2（小的） */
-.cat-glint-2 {
-    position: absolute;
-    bottom: 3px;
-    left: 2px;
-    width: 3px;
-    height: 3px;
-    background: rgba(255,255,255,0.9);
-    border-radius: 50%;
-    z-index: 3;
-}
-
-/* 开心眯眼 */
-.cat-face.happy .cat-eye {
-    height: 8px;
-    border-radius: 50% 50% 30% 30%;
-}
-.cat-face.happy .cat-iris,
-.cat-face.happy .cat-pupil,
-.cat-face.happy .cat-glint-1,
-.cat-face.happy .cat-glint-2 { display: none; }
-
-/* 困倦（半睁眼） */
-.cat-face.sleepy .cat-eye {
-    height: 7px;
-    border-radius: 0 0 50% 50%;
-}
-.cat-face.sleepy .cat-iris { opacity: 0.5; }
-.cat-face.sleepy .cat-glint-1,
-.cat-face.sleepy .cat-glint-2 { opacity: 0.4; }
-
-/* 惊吓（大眼） */
-.cat-face.scared .cat-eye { width: 22px; height: 24px; }
-.cat-face.scared .cat-eye-l { left: 7px; }
-.cat-face.scared .cat-eye-r { right: 7px; }
-.cat-face.scared .cat-iris { width: 18px; height: 20px; }
-.cat-face.scared .cat-pupil { width: 11px; height: 12px; }
-
-/* 歪头 */
-.cat-face.tilt { transform: translateX(-50%) rotate(14deg); }
-
-/* 眨眼 */
-.cat-face.blink-once .cat-eye {
+/* ---- 眨眼 ---- */
+.cat-pet.blink-once .cat-eyes-svg {
     animation: catBlink 0.3s ease;
 }
 @keyframes catBlink {
     0%, 100% { transform: scaleY(1); }
-    50% { transform: scaleY(0.08); }
+    50% { transform: scaleY(0.06); }
 }
 
-/* ---- 鼻子（粉色小心形/三角） ---- */
-.cat-nose {
-    position: absolute;
-    top: 33px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 9px;
-    height: 6px;
-    background: #EAAAAA;
-    border-radius: 45% 45% 55% 55%;
-    z-index: 3;
+/* ---- 尾巴 ---- */
+.cat-tail-svg {
+    transform-origin: 56px 186px;
+    transition: transform 0.3s ease;
 }
-
-/* ---- 嘴巴（小 W 形） ---- */
-.cat-mouth {
-    position: absolute;
-    top: 39px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 18px;
-    height: 7px;
-    z-index: 3;
-}
-.cat-mouth::before,
-.cat-mouth::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    width: 9px;
-    height: 5px;
-    border-bottom: 1.5px solid #C5B5A5;
-    border-radius: 0 0 50% 50%;
-}
-.cat-mouth::before { left: 0; }
-.cat-mouth::after  { right: 0; }
-
-/* 开心张嘴 */
-.cat-face.happy .cat-mouth::before,
-.cat-face.happy .cat-mouth::after { height: 7px; }
-
-/* ---- 腮红（粉色椭圆） ---- */
-.cat-blush {
-    position: absolute;
-    top: 31px;
-    width: 10px;
-    height: 6px;
-    background: rgba(255,185,175,0.45);
-    border-radius: 50%;
-    z-index: 2;
-}
-.cat-blush-l { left: 2px; }
-.cat-blush-r { right: 2px; }
-
-/* ---- 胡须（白色细线） ---- */
-.cat-whiskers { position: absolute; top: 31px; z-index: 2; }
-.cat-whiskers i {
-    display: block;
-    position: absolute;
-    width: 16px;
-    height: 1px;
-    background: rgba(200,195,188,0.7);
-    border-radius: 1px;
-    transform-origin: right center;
-}
-.cat-whiskers-l { left: -16px; }
-.cat-whiskers-r { right: -16px; }
-.cat-whiskers-l i:nth-child(1) { transform: rotate(-5deg);  top: 0; }
-.cat-whiskers-l i:nth-child(2) { transform: rotate(0deg);   top: 6px; }
-.cat-whiskers-l i:nth-child(3) { transform: rotate(5deg);   top: 12px; }
-.cat-whiskers-r i:nth-child(1) { transform: rotate(5deg);   top: 0;  transform-origin: left center; }
-.cat-whiskers-r i:nth-child(2) { transform: rotate(0deg);   top: 6px; transform-origin: left center; }
-.cat-whiskers-r i:nth-child(3) { transform: rotate(-5deg);  top: 12px;transform-origin: left center; }
-
-/* ---- 项圈 + 铃铛 ---- */
-.cat-collar {
-    position: absolute;
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 36px;
-    height: 8px;
-    background: linear-gradient(90deg, #E89898, #F0A8A8, #E89898);
-    border-radius: 4px;
-    z-index: 5;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-}
-.cat-bell {
-    position: absolute;
-    top: 5px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 10px;
-    height: 10px;
-    background: radial-gradient(circle at 38% 30%, #FFE566 0%, #F0C040 50%, #C89820 100%);
-    border-radius: 50%;
-    z-index: 6;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.12);
-}
-.cat-bell::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 3px;
-    background: #C89820;
-    border-radius: 50%;
-}
-
-/* ---- 爪子（两只小白爪） ---- */
-.cat-paws {
-    position: absolute;
-    bottom: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 48px;
-    height: 18px;
-    z-index: 4;
-}
-.cat-paw {
-    position: absolute;
-    bottom: 0;
-    width: 18px;
-    height: 14px;
-    background: radial-gradient(ellipse at 50% 30%, #FFFEFA 0%, #F5F0EC 100%);
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-.cat-paw-l { left: 2px; }
-.cat-paw-r { right: 2px; }
-
-/* 肉球 */
-.cat-paw::after {
-    content: '';
-    position: absolute;
-    bottom: 3px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 4px;
-    background: #ECC8C8;
-    border-radius: 50%;
-    opacity: 0.5;
-}
-
-/* ---- 尾巴（蓬松，带灰色渐变） ---- */
-.cat-tail {
-    position: absolute;
-    bottom: 30px;
-    left: -12px;
-    width: 30px;
-    height: 12px;
-    background: linear-gradient(90deg, #E8E3DB 0%, #D8D2C9 50%, #C5BFB5 100%);
-    border-radius: 50%;
-    transform: rotate(-30deg);
-    transform-origin: 80% 50%;
-    z-index: -1;
-    transition: transform 0.25s ease;
-}
-.cat-tail::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: -3px;
-    width: 14px;
-    height: 14px;
-    background: #F5F1EC;
-    border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-}
-.cat-tail.idle {
+.cat-tail-svg.idle {
     animation: tailIdle 4s ease-in-out infinite;
 }
 @keyframes tailIdle {
-    0%, 100% { transform: rotate(-30deg); }
-    25% { transform: rotate(-15deg); }
-    50% { transform: rotate(-38deg); }
-    75% { transform: rotate(-20deg); }
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-12deg); }
+    50% { transform: rotate(8deg); }
+    75% { transform: rotate(-6deg); }
 }
-
-/* 快速摇尾巴 */
-.cat-tail.wag {
-    animation: tailWag 0.35s ease-in-out 4;
+.cat-tail-svg.wag {
+    animation: tailWag 0.32s ease-in-out 5;
 }
 @keyframes tailWag {
-    0%, 100% { transform: rotate(-30deg); }
-    50% { transform: rotate(20deg); }
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(25deg); }
 }
 
-/* 雷暴发抖 */
-.cat-body-wrap.shaking {
+/* ---- 雷暴发抖 ---- */
+.cat-pet.thunder-mode .cat-svg-wrap {
     animation: catShake 0.3s ease-in-out infinite;
+    filter: drop-shadow(0 6px 16px rgba(255,200,60,0.4));
 }
 @keyframes catShake {
     0%, 100% { transform: translateX(0) scale(1); }
     25% { transform: translateX(-4px) scale(0.98, 1.02); }
     75% { transform: translateX(4px) scale(0.98, 1.02); }
-}
-
-/* 雷暴模式 */
-.cat-pet.thunder-mode .cat-body-wrap {
-    filter: drop-shadow(0 6px 14px rgba(255,200,60,0.35));
 }
 
 /* ---- 天气饰品 ---- */
@@ -1420,7 +1083,7 @@ h2 {
 }
 .cat-acc-emoji {
     position: absolute;
-    top: 6px;
+    top: -2px;
     left: 50%;
     transform: translateX(-50%);
     line-height: 1;
@@ -1446,7 +1109,7 @@ h2 {
     transition: opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
                 transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 3px 12px rgba(0,0,0,0.1);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     z-index: 20;
 }
 .cat-speech.show {
@@ -1465,7 +1128,22 @@ h2 {
     border-top: 6px solid rgba(255,255,255,0.96);
 }
 
-/* 暗色模式 */
+/* ---- 爱心粒子 ---- */
+.cat-heart {
+    position: fixed;
+    z-index: 9998;
+    pointer-events: none;
+    animation: heartFloat 1.2s ease-out forwards;
+    user-select: none;
+    -webkit-user-select: none;
+}
+@keyframes heartFloat {
+    0%   { opacity: 1; transform: translateY(0) scale(0.5) rotate(0deg); }
+    50%  { opacity: 1; transform: translateY(-40px) scale(1.3) rotate(15deg); }
+    100% { opacity: 0; transform: translateY(-75px) scale(0.7) rotate(-25deg); }
+}
+
+/* ---- 暗色模式 ---- */
 :root.dark-mode .cat-speech {
     background: rgba(50,50,65,0.96);
     color: #e0e0e0;
@@ -1485,64 +1163,9 @@ h2 {
     }
 }
 
-/* ---- 爱心粒子 ---- */
-.cat-heart {
-    position: fixed;
-    z-index: 9998;
-    pointer-events: none;
-    animation: heartFloat 1.2s ease-out forwards;
-    user-select: none;
-    -webkit-user-select: none;
-}
-@keyframes heartFloat {
-    0%   { opacity: 1; transform: translateY(0) scale(0.5) rotate(0deg); }
-    50%  { opacity: 1; transform: translateY(-40px) scale(1.3) rotate(15deg); }
-    100% { opacity: 0; transform: translateY(-75px) scale(0.7) rotate(-25deg); }
-}
-
-/* ---- 响应式：手机端缩小 ---- */
+/* ---- 手机端缩小 ---- */
 @media (max-width: 639px) {
-    .cat-body-wrap      { width: 66px; height: 84px; }
-    .cat-shadow          { width: 42px; height: 8px; bottom: 2px; }
-    .cat-body            { width: 52px; height: 38px; bottom: 14px; }
-    .cat-body::after     { width: 34px; height: 22px; }
-    .cat-face            { width: 48px; height: 44px; top: 6px; }
-    .cat-ear             { width: 16px; height: 13px; }
-    .cat-ear::after      { width: 8px; height: 6px; }
-    .cat-ear-l           { left: 5px; }
-    .cat-ear-r           { right: 5px; }
-    .cat-eye             { width: 14px; height: 16px; top: 16px; }
-    .cat-eye-l           { left: 7px; }
-    .cat-eye-r           { right: 7px; }
-    .cat-iris            { width: 11px; height: 13px; }
-    .cat-pupil           { width: 6px; height: 7px; }
-    .cat-glint-1         { width: 4px; height: 4px; }
-    .cat-glint-2         { width: 2px; height: 2px; }
-    .cat-nose            { width: 6px; height: 4px; top: 25px; }
-    .cat-mouth           { top: 30px; width: 12px; height: 5px; }
-    .cat-mouth::before,
-    .cat-mouth::after    { width: 7px; height: 4px; border-bottom-width: 1px; }
-    .cat-blush           { width: 7px; height: 4px; top: 24px; }
-    .cat-blush-l         { left: 2px; }
-    .cat-blush-r         { right: 2px; }
-    .cat-whiskers        { top: 24px; }
-    .cat-whiskers-l      { left: -12px; }
-    .cat-whiskers-r      { right: -12px; }
-    .cat-whiskers i      { width: 12px; height: 0.8px; }
-    .cat-collar          { top: 46px; width: 28px; height: 6px; }
-    .cat-bell            { width: 8px; height: 8px; top: 4px; }
-    .cat-bell::after     { width: 2px; height: 2px; }
-    .cat-paws            { width: 36px; bottom: 10px; }
-    .cat-paw             { width: 13px; height: 10px; }
-    .cat-tail            { width: 22px; height: 9px; bottom: 22px; left: -10px; }
-    .cat-tail::after     { width: 11px; height: 11px; }
-    .cat-face.scared .cat-eye { width: 16px; height: 18px; }
-    .cat-face.scared .cat-eye-l { left: 6px; }
-    .cat-face.scared .cat-eye-r { right: 6px; }
-    .cat-face.scared .cat-iris { width: 13px; height: 15px; }
-    .cat-face.scared .cat-pupil { width: 8px; height: 9px; }
-
-    /* 气泡适配 */
+    .cat-svg-wrap { width: 70px; height: 84px; }
     .cat-speech {
         font-size: 10px !important;
         padding: 5px 9px;
@@ -1551,39 +1174,11 @@ h2 {
         white-space: normal;
         word-break: break-all;
         line-height: 1.3;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 }
 
-/* ---- 响应式放大 ---- */
+/* ---- 桌面端放大 ---- */
 @media (min-width: 640px) {
-    .cat-body-wrap      { width: 110px; height: 140px; }
-    .cat-shadow          { width: 68px; height: 12px; }
-    .cat-body            { width: 86px; height: 62px; bottom: 24px; }
-    .cat-body::after     { width: 54px; height: 34px; }
-    .cat-face            { width: 78px; height: 72px; top: 10px; }
-    .cat-ear             { width: 24px; height: 20px; }
-    .cat-ear::after      { width: 12px; height: 10px; }
-    .cat-ear-l           { left: 10px; }
-    .cat-ear-r           { right: 10px; }
-    .cat-eye             { width: 24px; height: 26px; top: 26px; }
-    .cat-eye-l           { left: 10px; }
-    .cat-eye-r           { right: 10px; }
-    .cat-iris            { width: 20px; height: 22px; }
-    .cat-pupil           { width: 11px; height: 12px; }
-    .cat-glint-1         { width: 7px; height: 7px; }
-    .cat-glint-2         { width: 3.5px; height: 3.5px; }
-    .cat-nose            { width: 11px; height: 7px; top: 40px; }
-    .cat-mouth           { top: 47px; width: 22px; }
-    .cat-mouth::before,
-    .cat-mouth::after    { width: 11px; height: 6px; }
-    .cat-blush           { width: 12px; height: 7px; top: 38px; }
-    .cat-whiskers        { top: 37px; }
-    .cat-collar          { top: 74px; width: 44px; height: 10px; }
-    .cat-bell            { width: 12px; height: 12px; top: 7px; }
-    .cat-paws            { width: 58px; bottom: 16px; }
-    .cat-paw             { width: 22px; height: 17px; }
-    .cat-tail            { width: 36px; height: 15px; bottom: 38px; left: -14px; }
-    .cat-tail::after     { width: 17px; height: 17px; }
-    .cat-face.scared .cat-eye { width: 28px; height: 30px; }
+    .cat-svg-wrap { width: 120px; height: 144px; }
 }

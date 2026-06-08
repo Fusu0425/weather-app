@@ -1,6 +1,6 @@
 /* ============================================
  * 厦门天气小程序 — 天气小猫桌宠模块
- * CSS 橘猫 + 拖拽 + 天气反应 + 气泡
+ * SVG 萌猫 + 拖拽 + 天气反应 + 气泡
  * ============================================ */
 
 var CatPet = (function() {
@@ -14,7 +14,6 @@ var CatPet = (function() {
     var weatherCat = 'sunny';
     var bubbleTimer = null;
     var idleTimer = null;
-    var actionTimer = null;
     var heartPool = [];
     var isMobile = false;
 
@@ -52,6 +51,151 @@ var CatPet = (function() {
         return pool[Math.floor(Math.random() * pool.length)];
     }
 
+    // ---- SVG 猫咪（大头大眼萌猫） ----
+    var CAT_SVG = '' +
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" class="cat-svg">' +
+    '<defs>' +
+    '<radialGradient id="bodyGrad" cx="50%" cy="30%" r="70%">' +
+    '<stop offset="0%" stop-color="#FFFDF7"/>' +
+    '<stop offset="60%" stop-color="#F5EDE0"/>' +
+    '<stop offset="100%" stop-color="#E8DDCE"/>' +
+    '</radialGradient>' +
+    '<radialGradient id="headGrad" cx="50%" cy="30%" r="70%">' +
+    '<stop offset="0%" stop-color="#FFFEFA"/>' +
+    '<stop offset="70%" stop-color="#F7F0E6"/>' +
+    '<stop offset="100%" stop-color="#EDE3D5"/>' +
+    '</radialGradient>' +
+    '<radialGradient id="bellyGrad" cx="50%" cy="40%">' +
+    '<stop offset="0%" stop-color="#FFFEFC"/>' +
+    '<stop offset="100%" stop-color="rgba(255,255,255,0)"/>' +
+    '</radialGradient>' +
+    '<radialGradient id="eyeShine" cx="35%" cy="25%">' +
+    '<stop offset="0%" stop-color="#69C8E8"/>' +
+    '<stop offset="50%" stop-color="#4DA8C8"/>' +
+    '<stop offset="100%" stop-color="#2E6A80"/>' +
+    '</radialGradient>' +
+    '<filter id="softShadow">' +
+    '<feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.08"/>' +
+    '</filter>' +
+    '</defs>' +
+
+    '<!-- 地面阴影 -->' +
+    '<ellipse cx="100" cy="226" rx="45" ry="7" fill="rgba(0,0,0,0.07)" class="cat-shadow-svg"/>' +
+
+    '<!-- === 尾巴 === -->' +
+    '<g class="cat-tail-svg">' +
+    '<path d="M56,186 Q18,170 15,130 Q12,100 28,85" ' +
+    'fill="none" stroke="url(#bodyGrad)" stroke-width="13" stroke-linecap="round"/>' +
+    '<path d="M28,85 Q34,78 30,70" ' +
+    'fill="none" stroke="#FFFDF8" stroke-width="10" stroke-linecap="round"/>' +
+    '</g>' +
+
+    '<!-- === 身体 === -->' +
+    '<g filter="url(#softShadow)">' +
+    '<ellipse cx="100" cy="178" rx="48" ry="36" fill="url(#bodyGrad)"/>' +
+    '</g>' +
+
+    '<!-- 肚皮毛 -->' +
+    '<ellipse cx="100" cy="170" rx="28" ry="22" fill="url(#bellyGrad)"/>' +
+
+    '<!-- 身体花纹 -->' +
+    '<ellipse cx="84" cy="165" rx="14" ry="10" fill="rgba(210,190,165,0.12)"/>' +
+    '<ellipse cx="116" cy="180" rx="10" ry="8" fill="rgba(210,190,165,0.1)"/>' +
+
+    '<!-- === 爪子 === -->' +
+    '<g class="cat-paws-svg">' +
+    '<!-- 左爪 -->' +
+    '<ellipse cx="72" cy="202" rx="18" ry="13" fill="#FFFEFC"/>' +
+    '<ellipse cx="72" cy="206" rx="6" ry="3.5" fill="#FFD2D2" opacity="0.5"/>' +
+    '<!-- 左趾缝 -->' +
+    '<line x1="63" y1="200" x2="63" y2="209" stroke="#EEE" stroke-width="0.8"/>' +
+    '<line x1="72" y1="200" x2="72" y2="210" stroke="#EEE" stroke-width="0.8"/>' +
+    '<line x1="81" y1="200" x2="81" y2="209" stroke="#EEE" stroke-width="0.8"/>' +
+    '<!-- 右爪 -->' +
+    '<ellipse cx="128" cy="202" rx="18" ry="13" fill="#FFFEFC"/>' +
+    '<ellipse cx="128" cy="206" rx="6" ry="3.5" fill="#FFD2D2" opacity="0.5"/>' +
+    '<line x1="119" y1="200" x2="119" y2="209" stroke="#EEE" stroke-width="0.8"/>' +
+    '<line x1="128" y1="200" x2="128" y2="210" stroke="#EEE" stroke-width="0.8"/>' +
+    '<line x1="137" y1="200" x2="137" y2="209" stroke="#EEE" stroke-width="0.8"/>' +
+    '</g>' +
+
+    '<!-- === 头 === -->' +
+    '<g class="cat-head-svg">' +
+    '<ellipse cx="100" cy="88" rx="62" ry="56" fill="url(#headGrad)" filter="url(#softShadow)"/>' +
+
+    '<!-- 额头花纹 -->' +
+    '<ellipse cx="100" cy="52" rx="24" ry="16" fill="rgba(210,190,165,0.13)"/>' +
+    '<ellipse cx="88" cy="56" rx="10" ry="8" fill="rgba(210,190,165,0.1)"/>' +
+    '<ellipse cx="112" cy="56" rx="10" ry="8" fill="rgba(210,190,165,0.1)"/>' +
+
+    '<!-- === 耳朵 === -->' +
+    '<g class="cat-ears-svg">' +
+    '<!-- 左耳 -->' +
+    '<polygon points="40,60 22,8 72,42" fill="url(#bodyGrad)"/>' +
+    '<polygon points="42,54 30,18 64,42" fill="#FFDADA"/>' +
+    '<!-- 右耳 -->' +
+    '<polygon points="160,60 178,8 128,42" fill="url(#bodyGrad)"/>' +
+    '<polygon points="158,54 170,18 136,42" fill="#FFDADA"/>' +
+    '</g>' +
+
+    '<!-- === 眼睛（巨大✨bulingbuling✨） === -->' +
+    '<g class="cat-eyes-svg">' +
+    '<!-- 左眼 -->' +
+    '<ellipse cx="72" cy="82" rx="18" ry="20" fill="#FFF" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>' +
+    '<ellipse cx="74" cy="85" rx="12.5" ry="14.5" fill="url(#eyeShine)"/>' +
+    '<ellipse cx="75" cy="87" rx="7" ry="9.5" fill="#1A1525"/>' +
+    '<!-- 左眼高光 -->' +
+    '<circle cx="67" cy="76" r="5.5" fill="#FFF"/>' +
+    '<circle cx="79" cy="79.5" r="3" fill="#FFF"/>' +
+    '<circle cx="71" cy="91" r="2" fill="rgba(255,255,255,0.5)"/>' +
+    '<circle cx="82" cy="88" r="1" fill="rgba(255,255,255,0.3)"/>' +
+    '<!-- 右眼 -->' +
+    '<ellipse cx="128" cy="82" rx="18" ry="20" fill="#FFF" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>' +
+    '<ellipse cx="126" cy="85" rx="12.5" ry="14.5" fill="url(#eyeShine)"/>' +
+    '<ellipse cx="125" cy="87" rx="7" ry="9.5" fill="#1A1525"/>' +
+    '<!-- 右眼高光 -->' +
+    '<circle cx="133" cy="76" r="5.5" fill="#FFF"/>' +
+    '<circle cx="121" cy="79.5" r="3" fill="#FFF"/>' +
+    '<circle cx="129" cy="91" r="2" fill="rgba(255,255,255,0.5)"/>' +
+    '<circle cx="118" cy="88" r="1" fill="rgba(255,255,255,0.3)"/>' +
+    '</g>' +
+
+    '<!-- === 鼻子（粉色小心形） === -->' +
+    '<path d="M100,104 L96,108 A2 2 0 0 1 98,106 L100,108 L102,106 A2 2 0 0 1 104,108 Z" ' +
+    'fill="#FFAFAF" transform="translate(0, 1)"/>' +
+
+    '<!-- === 嘴巴（W形） === -->' +
+    '<g class="cat-mouth-svg">' +
+    '<path d="M92,113 Q96,119 100,113 Q104,119 108,113" ' +
+    'fill="none" stroke="#C5B5A5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</g>' +
+
+    '<!-- === 腮红 === -->' +
+    '<ellipse cx="46" cy="98" rx="13" ry="7.5" fill="#FFD6D6" opacity="0.55"/>' +
+    '<ellipse cx="154" cy="98" rx="13" ry="7.5" fill="#FFD6D6" opacity="0.55"/>' +
+
+    '<!-- === 胡须 === -->' +
+    '<g stroke="#D8D0C5" stroke-width="1.2" stroke-linecap="round" opacity="0.6">' +
+    '<line x1="18" y1="96" x2="56" y2="102"/>' +
+    '<line x1="16" y1="108" x2="54" y2="108"/>' +
+    '<line x1="18" y1="120" x2="56" y2="114"/>' +
+    '<line x1="182" y1="96" x2="144" y2="102"/>' +
+    '<line x1="184" y1="108" x2="146" y2="108"/>' +
+    '<line x1="182" y1="120" x2="144" y2="114"/>' +
+    '</g>' +
+    '</g>' +
+
+    '<!-- === 项圈 + 铃铛 === -->' +
+    '<g class="cat-collar-svg">' +
+    '<path d="M54,138 Q100,150 146,138" fill="none" stroke="#FF9E9E" stroke-width="7" stroke-linecap="round"/>' +
+    '<circle cx="100" cy="148" r="9" fill="#FFCD4D"/>' +
+    '<circle cx="100" cy="148" r="6" fill="#FFE97A"/>' +
+    '<circle cx="97" cy="145" r="2.5" fill="rgba(255,255,255,0.6)"/>' +
+    '<circle cx="100" cy="153" r="1.5" fill="#C89820"/>' +
+    '</g>' +
+    '</svg>';
+
+
     // ---- 创建 DOM ----
     function createDOM() {
         var pet = document.createElement('div');
@@ -60,59 +204,22 @@ var CatPet = (function() {
         pet.setAttribute('aria-label', '天气小猫');
         pet.innerHTML =
             '<div class="cat-speech" id="catSpeech"></div>' +
-            '<div class="cat-body-wrap">' +
-                '<div class="cat-shadow"></div>' +
-                '<div class="cat-body"></div>' +
-                '<div class="cat-ear cat-ear-l"></div>' +
-                '<div class="cat-ear cat-ear-r"></div>' +
-                '<div class="cat-face">' +
-                    '<div class="cat-eye cat-eye-l">' +
-                        '<div class="cat-iris">' +
-                            '<div class="cat-pupil"></div>' +
-                            '<div class="cat-glint-1"></div>' +
-                            '<div class="cat-glint-2"></div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="cat-eye cat-eye-r">' +
-                        '<div class="cat-iris">' +
-                            '<div class="cat-pupil"></div>' +
-                            '<div class="cat-glint-1"></div>' +
-                            '<div class="cat-glint-2"></div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="cat-nose"></div>' +
-                    '<div class="cat-mouth"></div>' +
-                    '<div class="cat-blush cat-blush-l"></div>' +
-                    '<div class="cat-blush cat-blush-r"></div>' +
-                    '<div class="cat-whiskers cat-whiskers-l">' +
-                        '<i></i><i></i><i></i>' +
-                    '</div>' +
-                    '<div class="cat-whiskers cat-whiskers-r">' +
-                        '<i></i><i></i><i></i>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="cat-collar"><div class="cat-bell"></div></div>' +
-                '<div class="cat-paws">' +
-                    '<div class="cat-paw cat-paw-l"></div>' +
-                    '<div class="cat-paw cat-paw-r"></div>' +
-                '</div>' +
-                '<div class="cat-tail"></div>' +
-                '<div class="cat-outfit" id="catOutfit"></div>' +
-            '</div>';
+            '<div class="cat-svg-wrap">' + CAT_SVG + '</div>' +
+            '<div class="cat-outfit" id="catOutfit"></div>';
 
         document.body.appendChild(pet);
 
-        dom.pet    = pet;
-        dom.speech = pet.querySelector('#catSpeech');
-        dom.face   = pet.querySelector('.cat-face');
-        dom.outfit = pet.querySelector('#catOutfit');
-        dom.eyeL   = pet.querySelector('.cat-eye-l');
-        dom.eyeR   = pet.querySelector('.cat-eye-r');
-        dom.mouth  = pet.querySelector('.cat-mouth');
-        dom.tail   = pet.querySelector('.cat-tail');
-        dom.body   = pet.querySelector('.cat-body-wrap');
+        dom.pet      = pet;
+        dom.speech   = pet.querySelector('#catSpeech');
+        dom.svgWrap  = pet.querySelector('.cat-svg-wrap');
+        dom.head     = pet.querySelector('.cat-head-svg');
+        dom.eyes     = pet.querySelector('.cat-eyes-svg');
+        dom.mouth    = pet.querySelector('.cat-mouth-svg');
+        dom.tail     = pet.querySelector('.cat-tail-svg');
+        dom.bodyWrap = pet.querySelector('.cat-svg-wrap');
+        dom.outfit   = pet.querySelector('#catOutfit');
 
-        // 延迟添加无限动画，避免 innerHTML 闪烁
+        // 延迟添加尾巴动画
         setTimeout(function() {
             if (dom.tail) dom.tail.classList.add('idle');
         }, 100);
@@ -121,8 +228,8 @@ var CatPet = (function() {
     // ---- 位置初始化 ----
     function initPosition() {
         isMobile = window.innerWidth < 640;
-        var pw = isMobile ? 66 : 90;
-        var ph = isMobile ? 84 : 115;
+        var pw = isMobile ? 70 : 100;
+        var ph = isMobile ? 84 : 120;
 
         var saved = null;
         try {
@@ -132,15 +239,13 @@ var CatPet = (function() {
 
         var vw = window.innerWidth;
         var vh = window.innerHeight;
-        // 手机端考虑安全区域和底部导航栏
-        var bottomMargin = isMobile ? 80 : 130;
-        var rightMargin = isMobile ? 8 : 14;
+        var bottomMargin = isMobile ? 70 : 120;
+        var rightMargin = isMobile ? 6 : 12;
 
         if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
             pos.x = Math.max(0, Math.min(saved.x, vw - pw));
             pos.y = Math.max(0, Math.min(saved.y, vh - ph));
         } else {
-            // 默认右下角
             pos.x = vw - pw - rightMargin;
             pos.y = vh - ph - bottomMargin;
         }
@@ -154,7 +259,6 @@ var CatPet = (function() {
         } else {
             dom.pet.style.transition = t;
         }
-        // 手机端用更短的过渡时间，触感更好
         if (isMobile && animate !== false) {
             dom.pet.style.transition = 'left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
         }
@@ -219,8 +323,6 @@ var CatPet = (function() {
         clampPos();
         applyPos(true);
         savePosition();
-
-        // 短距离点击 → 互动反馈
         if (dx < 8 && dy < 8) {
             onTap();
         }
@@ -229,26 +331,22 @@ var CatPet = (function() {
     function clampPos() {
         var vw = window.innerWidth;
         var vh = window.innerHeight;
-        var pw = isMobile ? 66 : 90;
-        var ph = isMobile ? 84 : 115;
+        var pw = isMobile ? 70 : 100;
+        var ph = isMobile ? 84 : 120;
         pos.x = Math.max(-18, Math.min(pos.x, vw - pw + 18));
         pos.y = Math.max(-10, Math.min(pos.y, vh - ph + 10));
     }
 
     // ---- 互动 ----
     function onTap() {
-        // 弹跳
         dom.pet.classList.add('bouncing');
         setTimeout(function() { dom.pet.classList.remove('bouncing'); }, 500);
-
-        // 冒爱心
         spawnHearts();
 
-        // 表情反应
-        dom.face.classList.add('happy');
-        setTimeout(function() { dom.face.classList.remove('happy'); }, 600);
+        // 开心脸
+        dom.pet.classList.add('happy-face');
+        setTimeout(function() { dom.pet.classList.remove('happy-face'); }, 600);
 
-        // 有时说话
         if (Math.random() < 0.5) {
             say(randomMsg(weatherCat), 2500);
         }
@@ -257,7 +355,7 @@ var CatPet = (function() {
     function spawnHearts() {
         var rect = dom.pet.getBoundingClientRect();
         var cx = rect.left + rect.width / 2;
-        var cy = rect.top + 20;
+        var cy = rect.top + 24;
         var emojis = ['💕','💖','✨','💝','🐾','💛'];
 
         for (var i = 0; i < 5; i++) {
@@ -272,7 +370,6 @@ var CatPet = (function() {
             document.body.appendChild(heart);
             heartPool.push(heart);
 
-            // 自动清理
             setTimeout(function() {
                 if (heart.parentNode) heart.parentNode.removeChild(heart);
                 var idx = heartPool.indexOf(heart);
@@ -286,10 +383,8 @@ var CatPet = (function() {
         if (!msg) return;
         duration = duration || 3000;
         clearTimeout(bubbleTimer);
-
         dom.speech.textContent = msg;
         dom.speech.classList.add('show');
-
         bubbleTimer = setTimeout(function() {
             dom.speech.classList.remove('show');
         }, duration);
@@ -305,45 +400,41 @@ var CatPet = (function() {
 
     function applyOutfit() {
         var acc = dom.outfit;
-        // 重置
-        dom.face.classList.remove('sleepy', 'scared', 'happy');
-        dom.body.classList.remove('shaking');
-        dom.pet.classList.remove('thunder-mode');
+        // 重置表情
+        dom.pet.classList.remove('sleepy-face', 'scared-face', 'happy-face', 'thunder-mode');
 
-        // 手机端饰品缩小
         var scale = isMobile ? 0.7 : 1;
-        var emojiStyle = function(size, top) {
+        function es(size, top) {
             return 'font-size:' + Math.round(size * scale) + 'px;top:' + Math.round(top * scale) + 'px;';
-        };
+        }
 
         switch (weatherCat) {
             case 'sunny':
-                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(24, 0) + '">😎</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(26, -4) + '">😎</span>';
                 break;
             case 'partly':
                 acc.innerHTML = '';
                 break;
             case 'cloudy':
-                dom.face.classList.add('sleepy');
+                dom.pet.classList.add('sleepy-face');
                 acc.innerHTML = '';
                 break;
             case 'fog':
-                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(20, 18) + '">🧣</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(22, 10) + '">🧣</span>';
                 break;
             case 'drizzle':
-                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(18, 2) + '">🧢</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(20, -2) + '">🧢</span>';
                 break;
             case 'rain':
-                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(22, -6) + '">☂️</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(24, -12) + '">☂️</span>';
                 break;
             case 'snow':
-                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(24, -8) + '">🎩</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(26, -14) + '">🎩</span>';
                 break;
             case 'thunder':
-                dom.face.classList.add('scared');
-                dom.body.classList.add('shaking');
+                dom.pet.classList.add('scared-face');
                 dom.pet.classList.add('thunder-mode');
-                acc.innerHTML = '<span class="cat-acc-emoji" style="' + emojiStyle(18, 0) + '">⚡</span>';
+                acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(20, -2) + '">⚡</span>';
                 break;
             default:
                 acc.innerHTML = '';
@@ -353,11 +444,20 @@ var CatPet = (function() {
     // ---- 闲时动作 ----
     var idleActions = [
         function() { say(randomMsg(weatherCat), 3000); },
-        function() { dom.tail.classList.remove('idle'); dom.tail.classList.add('wag'); setTimeout(function(){ dom.tail.classList.remove('wag'); dom.tail.classList.add('idle'); }, 1400); },
-        function() { dom.face.classList.add('blink-once'); setTimeout(function(){ dom.face.classList.remove('blink-once'); }, 300); },
+        function() {
+            if (dom.tail) {
+                dom.tail.classList.remove('idle');
+                dom.tail.classList.add('wag');
+                setTimeout(function() {
+                    dom.tail.classList.remove('wag');
+                    dom.tail.classList.add('idle');
+                }, 1400);
+            }
+        },
+        function() { dom.pet.classList.add('blink-once'); setTimeout(function(){ dom.pet.classList.remove('blink-once'); }, 300); },
         function() { dom.pet.classList.add('bouncing'); setTimeout(function(){ dom.pet.classList.remove('bouncing'); }, 500); },
-        function() { dom.face.classList.add('tilt'); setTimeout(function(){ dom.face.classList.remove('tilt'); }, 800); },
-        function() { /* 安静一会 */ }
+        function() { dom.pet.classList.add('tilt-head'); setTimeout(function(){ dom.pet.classList.remove('tilt-head'); }, 800); },
+        function() { /* 安静 */ }
     ];
 
     function startIdle() {
@@ -369,23 +469,15 @@ var CatPet = (function() {
         }, 8000 + Math.random() * 12000);
     }
 
-    // ---- 窗口大小变化处理 ----
+    // ---- 窗口大小变化 ----
     function onResize() {
-        // 手机端：检测是否从桌面切换到手机（横屏等）
         var wasMobile = isMobile;
         isMobile = window.innerWidth < 640;
-        // 如果设备类型变了，更新所有配件尺寸
-        if (wasMobile !== isMobile) {
-            // 设备类型变了，重新计算位置
-            clampPos();
-        } else {
-            clampPos();
-        }
+        clampPos();
         applyPos(false);
-        // 手机端不保存 resize 产生的位置（避免地址栏收起导致位置偏移保存）
-        if (!isMobile) {
-            savePosition();
-        }
+        if (!isMobile) savePosition();
+        // 设备类型变了 → 刷新配饰尺寸
+        if (wasMobile !== isMobile) applyOutfit();
     }
 
     // ---- 公开方法 ----
@@ -395,17 +487,14 @@ var CatPet = (function() {
         applyOutfit();
         startIdle();
 
-        // 绑定事件
         dom.pet.addEventListener('touchstart', onStart, { passive: false });
         document.addEventListener('touchmove',  onMove,  { passive: false });
         document.addEventListener('touchend',   onEnd);
         dom.pet.addEventListener('mousedown',  onStart);
         window.addEventListener('mousemove',   onMove);
         window.addEventListener('mouseup',     onEnd);
-
         window.addEventListener('resize', onResize);
 
-        // 初始问候
         setTimeout(function() {
             say('嗨!我是天气小猫~ 喵呜! 💕', 3500);
         }, 2000);
@@ -413,7 +502,6 @@ var CatPet = (function() {
 
     function setWeather(code) {
         updateWeather(code);
-        // 天气变化时说句话
         var msgs = SPEECH[weatherCat];
         if (msgs && msgs.length > 0 && Math.random() < 0.6) {
             setTimeout(function() {
@@ -430,7 +518,6 @@ var CatPet = (function() {
 
 })();
 
-// ---- 自动初始化（DOM Ready 后） ----
 document.addEventListener('DOMContentLoaded', function() {
     CatPet.init();
 });
