@@ -141,48 +141,38 @@ var CatPet = (function() {
     '<!-- === 眼睛（巨大✨bulingbuling✨） === -->' +
     '<g class="cat-eyes-svg">' +
     '<!-- 左眼 -->' +
-    '<ellipse cx="72" cy="82" rx="18" ry="20" fill="#FFF" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>' +
-    '<ellipse cx="74" cy="85" rx="12.5" ry="14.5" fill="url(#eyeShine)"/>' +
-    '<ellipse cx="75" cy="87" rx="7" ry="9.5" fill="#1A1525"/>' +
+    '<ellipse cx="72" cy="90" rx="17" ry="19" fill="#FFF" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>' +
+    '<ellipse cx="74" cy="93" rx="12" ry="14" fill="url(#eyeShine)"/>' +
+    '<ellipse cx="75" cy="95" rx="6.5" ry="9" fill="#1A1525"/>' +
     '<!-- 左眼高光 -->' +
-    '<circle cx="67" cy="76" r="5.5" fill="#FFF"/>' +
-    '<circle cx="79" cy="79.5" r="3" fill="#FFF"/>' +
-    '<circle cx="71" cy="91" r="2" fill="rgba(255,255,255,0.5)"/>' +
-    '<circle cx="82" cy="88" r="1" fill="rgba(255,255,255,0.3)"/>' +
+    '<circle cx="67" cy="84" r="5" fill="#FFF"/>' +
+    '<circle cx="79" cy="87" r="2.8" fill="#FFF"/>' +
+    '<circle cx="71" cy="98" r="1.8" fill="rgba(255,255,255,0.5)"/>' +
+    '<circle cx="82" cy="95" r="1" fill="rgba(255,255,255,0.3)"/>' +
     '<!-- 右眼 -->' +
-    '<ellipse cx="128" cy="82" rx="18" ry="20" fill="#FFF" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>' +
-    '<ellipse cx="126" cy="85" rx="12.5" ry="14.5" fill="url(#eyeShine)"/>' +
-    '<ellipse cx="125" cy="87" rx="7" ry="9.5" fill="#1A1525"/>' +
+    '<ellipse cx="128" cy="90" rx="17" ry="19" fill="#FFF" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>' +
+    '<ellipse cx="126" cy="93" rx="12" ry="14" fill="url(#eyeShine)"/>' +
+    '<ellipse cx="125" cy="95" rx="6.5" ry="9" fill="#1A1525"/>' +
     '<!-- 右眼高光 -->' +
-    '<circle cx="133" cy="76" r="5.5" fill="#FFF"/>' +
-    '<circle cx="121" cy="79.5" r="3" fill="#FFF"/>' +
-    '<circle cx="129" cy="91" r="2" fill="rgba(255,255,255,0.5)"/>' +
-    '<circle cx="118" cy="88" r="1" fill="rgba(255,255,255,0.3)"/>' +
+    '<circle cx="133" cy="84" r="5" fill="#FFF"/>' +
+    '<circle cx="121" cy="87" r="2.8" fill="#FFF"/>' +
+    '<circle cx="129" cy="98" r="1.8" fill="rgba(255,255,255,0.5)"/>' +
+    '<circle cx="118" cy="95" r="1" fill="rgba(255,255,255,0.3)"/>' +
     '</g>' +
 
     '<!-- === 鼻子（粉色小心形） === -->' +
-    '<path d="M100,104 L96,108 A2 2 0 0 1 98,106 L100,108 L102,106 A2 2 0 0 1 104,108 Z" ' +
-    'fill="#FFAFAF" transform="translate(0, 1)"/>' +
+    '<path d="M100,110 L96,114 A2 2 0 0 1 98,112 L100,114 L102,112 A2 2 0 0 1 104,114 Z" ' +
+    'fill="#FFAFAF"/>' +
 
-    '<!-- === 嘴巴（W形） === -->' +
+    '<!-- === 嘴巴（微笑） === -->' +
     '<g class="cat-mouth-svg">' +
-    '<path d="M92,113 Q96,119 100,113 Q104,119 108,113" ' +
-    'fill="none" stroke="#C5B5A5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="M92,116 Q100,126 108,116" ' +
+    'fill="none" stroke="#C5B5A5" stroke-width="1.8" stroke-linecap="round"/>' +
     '</g>' +
 
     '<!-- === 腮红 === -->' +
-    '<ellipse cx="46" cy="98" rx="13" ry="7.5" fill="#FFD6D6" opacity="0.55"/>' +
-    '<ellipse cx="154" cy="98" rx="13" ry="7.5" fill="#FFD6D6" opacity="0.55"/>' +
-
-    '<!-- === 胡须 === -->' +
-    '<g stroke="#D8D0C5" stroke-width="1.2" stroke-linecap="round" opacity="0.6">' +
-    '<line x1="18" y1="96" x2="56" y2="102"/>' +
-    '<line x1="16" y1="108" x2="54" y2="108"/>' +
-    '<line x1="18" y1="120" x2="56" y2="114"/>' +
-    '<line x1="182" y1="96" x2="144" y2="102"/>' +
-    '<line x1="184" y1="108" x2="146" y2="108"/>' +
-    '<line x1="182" y1="120" x2="144" y2="114"/>' +
-    '</g>' +
+    '<ellipse cx="44" cy="104" rx="12" ry="7" fill="#FFD6D6" opacity="0.55"/>' +
+    '<ellipse cx="156" cy="104" rx="12" ry="7" fill="#FFD6D6" opacity="0.55"/>' +
     '</g>' +
 
     '<!-- === 项圈 + 铃铛 === -->' +
