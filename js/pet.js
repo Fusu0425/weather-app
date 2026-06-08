@@ -1,6 +1,5 @@
 /* ============================================
- * 厦门天气小程序 — 天气小猫桌宠模块
- * SVG 萌猫 + 拖拽 + 天气反应 + 气泡
+ * 天气小猫桌宠 — SVG萌猫 + 眼神跟踪 + 拖拽变形 + 天气体态 + 多表情
  * ============================================ */
 
 var CatPet = (function() {
@@ -16,20 +15,22 @@ var CatPet = (function() {
     var idleTimer = null;
     var heartPool = [];
     var isMobile = false;
+    var cursorX = -999, cursorY = -999;   // 全局光标位置（眼神跟踪用）
+    var lastTapTime = 0;                   // 双击检测
+    var faceState = '';                    // 当前表情状态
 
     var dom = {};
 
     // ---- 天气分类 ----
     function getWeatherCat(code) {
-        if (code === 0)                       return 'sunny';
-        if (code >= 1  && code <= 2)          return 'partly';
-        if (code === 3)                       return 'cloudy';
-        if (code >= 45 && code <= 48)         return 'fog';
-        if (code >= 51 && code <= 55)         return 'drizzle';
-        if (code >= 61 && code <= 65)         return 'rain';
-        if (code >= 71 && code <= 86)         return 'snow';
-        if (code >= 80 && code <= 82)         return 'rain';
-        if (code >= 95 && code <= 99)         return 'thunder';
+        if (code === 0) return 'sunny';
+        if (code >= 1  && code <= 2)  return 'partly';
+        if (code === 3) return 'cloudy';
+        if (code >= 45 && code <= 48) return 'fog';
+        if (code >= 51 && code <= 55) return 'drizzle';
+        if (code >= 61 && code <= 82) return 'rain';
+        if (code >= 71 && code <= 86) return 'snow';
+        if (code >= 95 && code <= 99) return 'thunder';
         return 'sunny';
     }
 
@@ -51,7 +52,7 @@ var CatPet = (function() {
         return pool[Math.floor(Math.random() * pool.length)];
     }
 
-    // ---- SVG 猫咪（大头大眼萌猫） ----
+    // ---- SVG 猫咪（带 pupil ID 用于眼神跟踪） ----
     var CAT_SVG = '' +
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" class="cat-svg">' +
     '<defs>' +
@@ -76,10 +77,10 @@ var CatPet = (function() {
     '</radialGradient>' +
     '</defs>' +
 
-    // ====== 地面阴影 ======
+    // 地面阴影
     '<ellipse cx="100" cy="222" rx="40" ry="6" fill="rgba(0,0,0,0.06)"/>' +
 
-    // ====== 尾巴 ======
+    // 尾巴
     '<g class="cat-tail-svg">' +
     '<path d="M58,186 Q18,172 15,130 Q12,100 28,85" ' +
     'fill="none" stroke="url(#bodyGrad)" stroke-width="12" stroke-linecap="round"/>' +
@@ -87,59 +88,62 @@ var CatPet = (function() {
     'fill="none" stroke="#FFFDF8" stroke-width="9" stroke-linecap="round"/>' +
     '</g>' +
 
-    // ====== 身体 ======
+    // 身体
     '<ellipse cx="100" cy="175" rx="46" ry="34" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.04)" stroke-width="1"/>' +
     '<ellipse cx="100" cy="168" rx="26" ry="20" fill="url(#bellyGrad)"/>' +
     '<ellipse cx="84" cy="162" rx="12" ry="8" fill="rgba(210,190,165,0.1)"/>' +
     '<ellipse cx="116" cy="176" rx="8" ry="6" fill="rgba(210,190,165,0.08)"/>' +
 
-    // ====== 爪子 ======
+    // 爪子
     '<ellipse cx="72" cy="200" rx="17" ry="12" fill="#FFFEFC"/>' +
     '<ellipse cx="72" cy="204" rx="5.5" ry="3" fill="#FFD2D2" opacity="0.5"/>' +
     '<ellipse cx="128" cy="200" rx="17" ry="12" fill="#FFFEFC"/>' +
     '<ellipse cx="128" cy="204" rx="5.5" ry="3" fill="#FFD2D2" opacity="0.5"/>' +
 
-    // ====== 项圈 + 铃铛 ======
+    // 项圈
     '<path d="M56,137 Q100,148 144,137" fill="none" stroke="#FF9E9E" stroke-width="6" stroke-linecap="round"/>' +
     '<circle cx="100" cy="146" r="8" fill="#FFCD4D"/>' +
     '<circle cx="100" cy="146" r="5" fill="#FFE97A"/>' +
     '<circle cx="97" cy="143" r="2" fill="rgba(255,255,255,0.6)"/>' +
 
-    // ====== 头部（扁平无嵌套） ======
+    // 头部
     '<ellipse id="catHeadEl" cx="100" cy="98" rx="56" ry="52" fill="url(#headGrad)" stroke="rgba(0,0,0,0.04)" stroke-width="1"/>' +
     '<ellipse cx="100" cy="65" rx="20" ry="12" fill="rgba(210,190,165,0.1)"/>' +
 
-    // ====== 耳朵（画在头后面所以先出） ======
+    // 耳朵
     '<polygon points="44,72 28,20 70,52" fill="url(#bodyGrad)"/>' +
     '<polygon points="46,66 34,30 64,52" fill="#FFDADA"/>' +
     '<polygon points="156,72 172,20 130,52" fill="url(#bodyGrad)"/>' +
     '<polygon points="154,66 166,30 136,52" fill="#FFDADA"/>' +
 
-    // ====== 眼睛 ======
+    // 眼睛
     '<g class="cat-eyes-svg">' +
+    // 左眼
     '<ellipse cx="72" cy="100" rx="16" ry="18" fill="#FFF" stroke="rgba(0,0,0,0.04)" stroke-width="1"/>' +
-    '<ellipse cx="74" cy="103" rx="11" ry="13" fill="url(#eyeShine)"/>' +
-    '<ellipse cx="75" cy="105" rx="6" ry="8.5" fill="#1A1525"/>' +
+    '<ellipse id="catIrisL" cx="74" cy="103" rx="11" ry="13" fill="url(#eyeShine)"/>' +
+    '<ellipse id="catPupilL" cx="75" cy="105" rx="6" ry="8.5" fill="#1A1525"/>' +
     '<circle cx="67" cy="94" r="4.5" fill="#FFF"/>' +
     '<circle cx="79" cy="97" r="2.5" fill="#FFF"/>' +
     '<circle cx="71" cy="108" r="1.5" fill="rgba(255,255,255,0.5)"/>' +
+    // 右眼
     '<ellipse cx="128" cy="100" rx="16" ry="18" fill="#FFF" stroke="rgba(0,0,0,0.04)" stroke-width="1"/>' +
-    '<ellipse cx="126" cy="103" rx="11" ry="13" fill="url(#eyeShine)"/>' +
-    '<ellipse cx="125" cy="105" rx="6" ry="8.5" fill="#1A1525"/>' +
+    '<ellipse id="catIrisR" cx="126" cy="103" rx="11" ry="13" fill="url(#eyeShine)"/>' +
+    '<ellipse id="catPupilR" cx="125" cy="105" rx="6" ry="8.5" fill="#1A1525"/>' +
     '<circle cx="133" cy="94" r="4.5" fill="#FFF"/>' +
     '<circle cx="121" cy="97" r="2.5" fill="#FFF"/>' +
     '<circle cx="129" cy="108" r="1.5" fill="rgba(255,255,255,0.5)"/>' +
     '</g>' +
 
-    // ====== 鼻子 ======
-    '<path d="M100,117 L97,120 A1.5 1.5 0 0 1 99,118 L100,120 L101,118 A1.5 1.5 0 0 1 103,120 Z" ' +
-    'fill="#FFAFAF"/>' +
+    // 鼻子
+    '<path id="catNose" d="M100,117 L97,120 A1.5 1.5 0 0 1 99,118 L100,120 L101,118 A1.5 1.5 0 0 1 103,120 Z" fill="#FFAFAF"/>' +
 
-    // ====== 嘴巴（微笑） ======
-    '<path d="M94,122 Q100,130 106,122" ' +
-    'fill="none" stroke="#C5B5A5" stroke-width="1.6" stroke-linecap="round"/>' +
+    // 嘴巴
+    '<path id="catMouth" d="M94,122 Q100,130 106,122" fill="none" stroke="#C5B5A5" stroke-width="1.6" stroke-linecap="round"/>' +
 
-    // ====== 腮红 ======
+    // 舌头（默认隐藏）
+    '<ellipse id="catTongue" cx="100" cy="128" rx="4" ry="5" fill="#FF8888" opacity="0" style="transition:opacity 0.2s"/>' +
+
+    // 腮红
     '<ellipse cx="46" cy="112" rx="11" ry="6" fill="#FFD6D6" opacity="0.5"/>' +
     '<ellipse cx="154" cy="112" rx="11" ry="6" fill="#FFD6D6" opacity="0.5"/>' +
 
@@ -167,8 +171,14 @@ var CatPet = (function() {
         dom.tail     = pet.querySelector('.cat-tail-svg');
         dom.bodyWrap = pet.querySelector('.cat-svg-wrap');
         dom.outfit   = pet.querySelector('#catOutfit');
+        dom.pupilL   = pet.querySelector('#catPupilL');
+        dom.pupilR   = pet.querySelector('#catPupilR');
+        dom.irisL    = pet.querySelector('#catIrisL');
+        dom.irisR    = pet.querySelector('#catIrisR');
+        dom.mouth    = pet.querySelector('#catMouth');
+        dom.tongue   = pet.querySelector('#catTongue');
+        dom.nose     = pet.querySelector('#catNose');
 
-        // 延迟添加尾巴动画
         setTimeout(function() {
             if (dom.tail) dom.tail.classList.add('idle');
         }, 100);
@@ -227,7 +237,54 @@ var CatPet = (function() {
         try { localStorage.setItem('catpet_pos', JSON.stringify(pos)); } catch(e) {}
     }
 
-    // ---- 事件处理 ----
+    // ==============================================
+    //  👀 眼神跟踪：瞳孔跟随光标/手指移动
+    // ==============================================
+    function updateEyeTracking() {
+        if (!dom.pupilL || !dom.pupilR) return;
+
+        var rect = dom.pet.getBoundingClientRect();
+        var petCX = rect.left + rect.width / 2;
+        var petCY = rect.top + rect.height * 0.42; // 眼睛大概在42%高度
+        var svgScale = rect.width / 200; // SVG viewBox 是200宽
+
+        // 光标到猫中心的偏移
+        var dx = (cursorX - petCX) / svgScale;
+        var dy = (cursorY - petCY) / svgScale;
+
+        // 限制瞳孔移动半径（最多 4 SVG 单位）
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        var maxDist = 4.5;
+        if (dist > maxDist) {
+            dx = dx / dist * maxDist;
+            dy = dy / dist * maxDist;
+        }
+
+        // 只在光标靠近时跟踪（200px 以内）
+        var screenDist = Math.sqrt(
+            Math.pow(cursorX - petCX, 2) + Math.pow(cursorY - petCY, 2)
+        );
+        if (screenDist > 250 || screenDist < 0) {
+            // 光标太远 → 回正
+            dx = 0; dy = 0;
+        }
+
+        // 更新瞳孔和虹膜位置
+        var baseLX = 75, baseLY = 105;
+        var baseRX = 125, baseRY = 105;
+        dom.pupilL.setAttribute('cx', (baseLX + dx).toFixed(1));
+        dom.pupilL.setAttribute('cy', (baseLY + dy).toFixed(1));
+        dom.pupilR.setAttribute('cx', (baseRX + dx).toFixed(1));
+        dom.pupilR.setAttribute('cy', (baseRY + dy).toFixed(1));
+        dom.irisL.setAttribute('cx', (74 + dx * 0.7).toFixed(1));
+        dom.irisL.setAttribute('cy', (103 + dy * 0.7).toFixed(1));
+        dom.irisR.setAttribute('cx', (126 + dx * 0.7).toFixed(1));
+        dom.irisR.setAttribute('cy', (103 + dy * 0.7).toFixed(1));
+    }
+
+    // ==============================================
+    //  事件处理
+    // ==============================================
     function getXY(e) {
         if (e.touches && e.touches.length > 0) {
             return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -238,6 +295,14 @@ var CatPet = (function() {
         return { x: e.clientX, y: e.clientY };
     }
 
+    // 全局光标跟踪（不限于拖动）
+    function onPointerMove(e) {
+        var pt = getXY(e);
+        cursorX = pt.x;
+        cursorY = pt.y;
+        if (!dragging) updateEyeTracking();
+    }
+
     function onStart(e) {
         if (dragging) return;
         var pt = getXY(e);
@@ -246,6 +311,8 @@ var CatPet = (function() {
         dragStart.py = pos.y;
         dragStart.cx = pt.x;
         dragStart.cy = pt.y;
+        dragStart.lastX = pt.x;
+        dragStart.lastY = pt.y;
         dom.pet.classList.add('dragging');
         dom.pet.style.transition = 'none';
         e.preventDefault();
@@ -258,8 +325,22 @@ var CatPet = (function() {
         var dy = pt.y - dragStart.cy;
         pos.x = dragStart.px + dx;
         pos.y = dragStart.py + dy;
+
+        // 🏃 拖拽拉伸变形
+        var moveDX = pt.x - dragStart.lastX;
+        var moveDY = pt.y - dragStart.lastY;
+        var speed = Math.sqrt(moveDX * moveDX + moveDY * moveDY);
+        if (speed > 2) {
+            var stretchX = 1 + Math.min(speed * 0.004, 0.15) * (moveDX > 0 ? 1 : -1);
+            var stretchY = 1 - Math.min(speed * 0.003, 0.1);
+            dom.svgWrap.style.transform = 'scaleX(' + stretchX.toFixed(2) + ') scaleY(' + stretchY.toFixed(2) + ')';
+        }
+        dragStart.lastX = pt.x;
+        dragStart.lastY = pt.y;
+
         clampPos();
         applyPos(false);
+        updateEyeTracking();
         e.preventDefault();
     }
 
@@ -269,9 +350,17 @@ var CatPet = (function() {
         var dy = Math.abs(pos.y - dragStart.py);
         dragging = false;
         dom.pet.classList.remove('dragging');
+
+        // 回弹
+        dom.svgWrap.style.transform = 'scaleX(1.1) scaleY(0.9)';
+        setTimeout(function() {
+            dom.svgWrap.style.transform = '';
+        }, 80);
+
         clampPos();
         applyPos(true);
         savePosition();
+
         if (dx < 8 && dy < 8) {
             onTap();
         }
@@ -286,36 +375,60 @@ var CatPet = (function() {
         pos.y = Math.max(-10, Math.min(pos.y, vh - ph + 10));
     }
 
-    // ---- 互动 ----
+    // ==============================================
+    //  互动
+    // ==============================================
     function onTap() {
+        var now = Date.now();
+
+        // 🎯 双击检测（500ms 内两次点击）
+        if (now - lastTapTime < 500) {
+            onDoubleTap();
+            lastTapTime = 0;
+            return;
+        }
+        lastTapTime = now;
+
+        // 单次点击
         dom.pet.classList.add('bouncing');
         setTimeout(function() { dom.pet.classList.remove('bouncing'); }, 500);
-        spawnHearts();
 
-        // 开心脸
-        dom.pet.classList.add('happy-face');
-        setTimeout(function() { dom.pet.classList.remove('happy-face'); }, 600);
+        spawnHearts(5);
+        setExpression('happy', 600);
 
         if (Math.random() < 0.5) {
             say(randomMsg(weatherCat), 2500);
         }
     }
 
-    function spawnHearts() {
+    function onDoubleTap() {
+        // 大爱心爆发！
+        spawnHearts(14);
+        dom.pet.classList.add('double-tap-pop');
+        setTimeout(function() { dom.pet.classList.remove('double-tap-pop'); }, 700);
+
+        // 星星眼 ✨
+        setExpression('stars', 1200);
+
+        say('好开心喵!! 💖💖', 2500);
+    }
+
+    function spawnHearts(count) {
+        count = count || 5;
         var rect = dom.pet.getBoundingClientRect();
         var cx = rect.left + rect.width / 2;
         var cy = rect.top + 24;
-        var emojis = ['💕','💖','✨','💝','🐾','💛'];
+        var emojis = ['💕','💖','✨','💝','🐾','💛','💗','🩷','🌸','⭐'];
 
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < count; i++) {
             var heart = document.createElement('span');
             heart.className = 'cat-heart';
             heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-            heart.style.left = cx + (Math.random() - 0.5) * 60 + 'px';
+            heart.style.left = cx + (Math.random() - 0.5) * 80 + 'px';
             heart.style.top  = cy + 'px';
-            heart.style.fontSize = (14 + Math.random() * 14) + 'px';
-            heart.style.animationDuration = (0.8 + Math.random() * 0.8) + 's';
-            heart.style.animationDelay = Math.random() * 0.15 + 's';
+            heart.style.fontSize = (14 + Math.random() * 16) + 'px';
+            heart.style.animationDuration = (0.6 + Math.random() * 1.2) + 's';
+            heart.style.animationDelay = Math.random() * 0.2 + 's';
             document.body.appendChild(heart);
             heartPool.push(heart);
 
@@ -323,7 +436,51 @@ var CatPet = (function() {
                 if (heart.parentNode) heart.parentNode.removeChild(heart);
                 var idx = heartPool.indexOf(heart);
                 if (idx >= 0) heartPool.splice(idx, 1);
-            }, 1600 + i * 50);
+            }, 2000 + i * 40);
+        }
+    }
+
+    // ==============================================
+    //  🎭 表情系统
+    // ==============================================
+    function setExpression(expr, duration) {
+        // 清除旧表情
+        dom.pet.classList.remove('happy-face', 'scared-face', 'sleepy-face', 'stars-face', 'tongue-face', 'dizzy-face');
+
+        // 重置舌头
+        if (dom.tongue) dom.tongue.setAttribute('opacity', '0');
+
+        // 重置嘴巴
+        if (dom.mouth) dom.mouth.setAttribute('d', 'M94,122 Q100,130 106,122');
+
+        faceState = expr;
+
+        switch (expr) {
+            case 'happy':
+                dom.pet.classList.add('happy-face');
+                break;
+            case 'scared':
+                dom.pet.classList.add('scared-face');
+                break;
+            case 'sleepy':
+                dom.pet.classList.add('sleepy-face');
+                break;
+            case 'stars':
+                dom.pet.classList.add('stars-face');
+                break;
+            case 'tongue':
+                dom.pet.classList.add('tongue-face');
+                if (dom.tongue) dom.tongue.setAttribute('opacity', '1');
+                break;
+            case 'dizzy':
+                dom.pet.classList.add('dizzy-face');
+                break;
+        }
+
+        if (duration && duration > 0) {
+            setTimeout(function() {
+                if (faceState === expr) setExpression('', 0);
+            }, duration);
         }
     }
 
@@ -339,7 +496,9 @@ var CatPet = (function() {
         }, duration);
     }
 
-    // ---- 天气更新 ----
+    // ==============================================
+    //  🌤️ 天气更新（配饰 + 体态 + 表情）
+    // ==============================================
     function updateWeather(code) {
         if (code == null) return;
         weatherCode = code;
@@ -349,8 +508,11 @@ var CatPet = (function() {
 
     function applyOutfit() {
         var acc = dom.outfit;
-        // 重置表情
-        dom.pet.classList.remove('sleepy-face', 'scared-face', 'happy-face', 'thunder-mode');
+        dom.pet.classList.remove('sleepy-face', 'scared-face', 'happy-face', 'stars-face', 'tongue-face',
+            'dizzy-face', 'thunder-mode', 'shiver-mode', 'stretch-mode', 'squish-mode');
+
+        if (dom.tongue) dom.tongue.setAttribute('opacity', '0');
+        if (dom.mouth) dom.mouth.setAttribute('d', 'M94,122 Q100,130 106,122');
 
         var scale = isMobile ? 0.7 : 1;
         function es(size, top) {
@@ -360,52 +522,86 @@ var CatPet = (function() {
         switch (weatherCat) {
             case 'sunny':
                 acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(26, -4) + '">😎</span>';
+                dom.pet.classList.add('stretch-mode'); // 晴天舒展
                 break;
+
             case 'partly':
                 acc.innerHTML = '';
                 break;
+
             case 'cloudy':
                 dom.pet.classList.add('sleepy-face');
                 acc.innerHTML = '';
                 break;
+
             case 'fog':
                 acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(22, 10) + '">🧣</span>';
                 break;
+
             case 'drizzle':
                 acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(20, -2) + '">🧢</span>';
                 break;
+
             case 'rain':
                 acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(24, -12) + '">☂️</span>';
+                dom.pet.classList.add('squish-mode'); // 雨天缩起来
                 break;
+
             case 'snow':
                 acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(26, -14) + '">🎩</span>';
+                dom.pet.classList.add('shiver-mode'); // 雪天发抖
                 break;
+
             case 'thunder':
                 dom.pet.classList.add('scared-face');
                 dom.pet.classList.add('thunder-mode');
+                dom.pet.classList.add('squish-mode');
                 acc.innerHTML = '<span class="cat-acc-emoji" style="' + es(20, -2) + '">⚡</span>';
                 break;
+
             default:
                 acc.innerHTML = '';
         }
     }
 
-    // ---- 闲时动作 ----
+    // ==============================================
+    //  🎬 闲时动作（更丰富）
+    // ==============================================
     var idleActions = [
         function() { say(randomMsg(weatherCat), 3000); },
         function() {
             if (dom.tail) {
                 dom.tail.classList.remove('idle');
                 dom.tail.classList.add('wag');
-                setTimeout(function() {
-                    dom.tail.classList.remove('wag');
-                    dom.tail.classList.add('idle');
-                }, 1400);
+                setTimeout(function(){ dom.tail.classList.remove('wag'); dom.tail.classList.add('idle'); }, 1400);
             }
         },
         function() { dom.pet.classList.add('blink-once'); setTimeout(function(){ dom.pet.classList.remove('blink-once'); }, 300); },
         function() { dom.pet.classList.add('bouncing'); setTimeout(function(){ dom.pet.classList.remove('bouncing'); }, 500); },
         function() { dom.pet.classList.add('tilt-head'); setTimeout(function(){ dom.pet.classList.remove('tilt-head'); }, 800); },
+        // 新增闲时动作
+        function() {
+            // 打哈欠
+            setExpression('tongue', 1500);
+            dom.pet.classList.add('bouncing');
+            setTimeout(function(){ dom.pet.classList.remove('bouncing'); }, 400);
+        },
+        function() {
+            // 转圈圈
+            dom.pet.classList.add('dizzy-face');
+            setTimeout(function(){ dom.pet.classList.remove('dizzy-face'); }, 2000);
+        },
+        function() {
+            // 快速眨眼两次
+            dom.pet.classList.add('blink-once');
+            setTimeout(function(){
+                dom.pet.classList.remove('blink-once');
+                setTimeout(function(){
+                    dom.pet.classList.add('blink-once');
+                    setTimeout(function(){ dom.pet.classList.remove('blink-once'); }, 250);
+                }, 200);
+            }, 300);
+        },
         function() { /* 安静 */ }
     ];
 
@@ -415,7 +611,7 @@ var CatPet = (function() {
             if (dragging) return;
             var action = idleActions[Math.floor(Math.random() * idleActions.length)];
             action();
-        }, 8000 + Math.random() * 12000);
+        }, 7000 + Math.random() * 11000);
     }
 
     // ---- 窗口大小变化 ----
@@ -425,23 +621,37 @@ var CatPet = (function() {
         clampPos();
         applyPos(false);
         if (!isMobile) savePosition();
-        // 设备类型变了 → 刷新配饰尺寸
         if (wasMobile !== isMobile) applyOutfit();
     }
 
-    // ---- 公开方法 ----
+    // ==============================================
+    //  🚀 初始化
+    // ==============================================
     function init() {
         createDOM();
         initPosition();
         applyOutfit();
         startIdle();
 
+        // 触摸/鼠标事件
         dom.pet.addEventListener('touchstart', onStart, { passive: false });
         document.addEventListener('touchmove',  onMove,  { passive: false });
         document.addEventListener('touchend',   onEnd);
         dom.pet.addEventListener('mousedown',  onStart);
         window.addEventListener('mousemove',   onMove);
         window.addEventListener('mouseup',     onEnd);
+
+        // 👀 眼神跟踪：监听全局光标
+        window.addEventListener('mousemove',  onPointerMove);
+        document.addEventListener('touchmove', onPointerMove, { passive: true });
+
+        // 眼睛跟踪循环（60fps）
+        var eyeLoop = function() {
+            if (!dragging) updateEyeTracking();
+            requestAnimationFrame(eyeLoop);
+        };
+        requestAnimationFrame(eyeLoop);
+
         window.addEventListener('resize', onResize);
 
         setTimeout(function() {

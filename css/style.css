@@ -1040,6 +1040,72 @@ h2 {
     50% { transform: scaleY(0.06); }
 }
 
+/* ---- 新表情：星星眼（大爱心替瞳孔） ---- */
+.cat-pet.stars-face .cat-eyes-svg {
+    animation: eyesStars 1.2s ease;
+}
+@keyframes eyesStars {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.25); }
+    60%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* ---- 新表情：吐舌头 ---- */
+.cat-pet.tongue-face .cat-eyes-svg {
+    transform: scaleY(0.25);
+    transition: transform 0.3s ease;
+}
+
+/* ---- 新表情：晕眩（左右摇摆） ---- */
+.cat-pet.dizzy-face .cat-svg-wrap {
+    animation: dizzyWobble 0.5s ease-in-out 4;
+}
+@keyframes dizzyWobble {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-12deg); }
+    75% { transform: rotate(12deg); }
+}
+
+/* ---- 天气体态：舒展（晴天） ---- */
+.cat-pet.stretch-mode .cat-svg-wrap {
+    transform: scaleX(1.06) scaleY(0.96);
+    transition: transform 0.4s ease;
+}
+
+/* ---- 天气体态：缩起来（雨天/雷暴） ---- */
+.cat-pet.squish-mode .cat-svg-wrap {
+    transform: scaleX(0.92) scaleY(1.04);
+    transition: transform 0.4s ease;
+}
+
+/* ---- 天气体态：发抖（雪天） ---- */
+.cat-pet.shiver-mode .cat-svg-wrap {
+    animation: catShiver 0.15s ease-in-out infinite;
+}
+@keyframes catShiver {
+    0%, 100% { transform: translateX(0) scale(1); }
+    25% { transform: translateX(-2px) scale(0.98, 1.02); }
+    75% { transform: translateX(2px) scale(0.98, 1.02); }
+}
+
+/* ---- 双击爆发 ---- */
+.cat-pet.double-tap-pop .cat-svg-wrap {
+    animation: doublePop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes doublePop {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.3); }
+    50%  { transform: scale(0.85); }
+    70%  { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* ---- 拖拽拉伸过渡 ---- */
+.cat-pet .cat-svg-wrap {
+    transition: transform 0.12s ease-out;
+}
+
 /* ---- 尾巴 ---- */
 .cat-tail-svg {
     transform-origin: 56px 186px;
