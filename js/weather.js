@@ -357,11 +357,12 @@ var Weather = (function() {
 
             // 更新小猫桌宠
             if (window.CatPet && CatPet.setWeather) {
+                var wcd = WEATHER_CODES[weatherData.current.weather_code] || ['未知','❓'];
                 CatPet.setWeather(weatherData.current.weather_code, {
                     temp: Math.round(weatherData.current.temperature_2m),
                     humidity: weatherData.current.relative_humidity_2m,
                     feelsLike: Math.round(weatherData.current.apparent_temperature),
-                    desc: cd[0]
+                    desc: wcd[0]
                 });
                 // 传递逐时数据用于下雨预警
                 if (CatPet.setHourlyData) {
