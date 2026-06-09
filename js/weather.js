@@ -327,7 +327,13 @@ var Weather = (function() {
             render(lastWeather, lastAqi || null);
             // 缓存页也更新小猫
             if (window.CatPet && CatPet.setWeather) {
-                CatPet.setWeather(lastWeather.current.weather_code);
+                var lcd = WEATHER_CODES[lastWeather.current.weather_code] || ['未知','❓'];
+                CatPet.setWeather(lastWeather.current.weather_code, {
+                    temp: Math.round(lastWeather.current.temperature_2m),
+                    humidity: lastWeather.current.relative_humidity_2m,
+                    feelsLike: Math.round(lastWeather.current.apparent_temperature),
+                    desc: lcd[0]
+                });
             }
         }
 
@@ -351,7 +357,16 @@ var Weather = (function() {
 
             // 更新小猫桌宠
             if (window.CatPet && CatPet.setWeather) {
-                CatPet.setWeather(weatherData.current.weather_code);
+                CatPet.setWeather(weatherData.current.weather_code, {
+                    temp: Math.round(weatherData.current.temperature_2m),
+                    humidity: weatherData.current.relative_humidity_2m,
+                    feelsLike: Math.round(weatherData.current.apparent_temperature),
+                    desc: cd[0]
+                });
+                // 传递逐时数据用于下雨预警
+                if (CatPet.setHourlyData) {
+                    CatPet.setHourlyData(weatherData.hourly);
+                }
             }
 
             // 立即渲染天气（AQI 可能已有缓存，否则显示为空）

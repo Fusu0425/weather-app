@@ -19,6 +19,17 @@ var CatPet = (function() {
     var lastTapTime = 0;                   // 双击检测
     var faceState = '';                    // 当前表情状态
 
+    // 🆕 天气数据 + 情绪 + 自动走路 + 撸猫
+    var weatherNow = null;          // { temp, humidity, feelsLike, desc }
+    var hourlyData = null;          // 逐时预报（下雨预警用）
+    var mood = 'happy';             // energetic / happy / lazy / sleepy / scared
+    var isPurring = false;
+    var petStrokeCount = 0;
+    var petStrokeLastX = 0;
+    var petStrokeLastTime = 0;
+    var autoWalkTimer = null;
+    var greetingDone = false;
+
     var dom = {};
 
     // ---- 天气分类 ----
@@ -51,6 +62,21 @@ var CatPet = (function() {
         var pool = (SPEECH[cat] || []).concat(SPEECH.generic);
         return pool[Math.floor(Math.random() * pool.length)];
     }
+
+    // 🆕 撸猫反馈
+    var PET_MSGS = [
+        '呼噜呼噜~ 好舒服喵~ 💕','喵呜~ 再摸一下!','咕噜咕噜~','好开心喵! 🥰',
+        '眯眼~ 就是那里~','喵呜——!','(幸福地打滚)','蹭蹭你的手~'
+    ];
+
+    // 🆕 心情 → 体态映射
+    var MOOD_POSE = {
+        energetic: 'stretch-mode',
+        happy:     '',
+        lazy:      'squish-mode',
+        sleepy:    'sleepy-face',
+        scared:    'squish-mode'
+    };
 
     // ---- SVG 猫咪（带 pupil ID 用于眼神跟踪） ----
     var CAT_SVG = '' +
@@ -149,6 +175,233 @@ var CatPet = (function() {
 
     '</svg>';
 
+
+    // ==============================================
+    //  🆕 心情系统
+    // ==============================================
+    function updateMood() {
+        var h = new Date().getHours();
+        var code = weatherCode;
+        var old = mood;
+
+        if (code >= 95 && code <= 99)     mood = 'scared';
+        else if (code >= 61 && code <= 82) mood = 'sleepy';
+        else if (code >= 51 && code <= 55) mood = 'lazy';
+        else if (code === 3)               mood = 'lazy';
+        else if (code === 0 && h >= 6 && h < 18) mood = 'energetic';
+        else if (h >= 22 || h < 6)         mood = 'sleepy';
+        else                               mood = 'happy';
+
+        if (mood !== old) applyMoodPose();
+    }
+
+    function applyMoodPose() {
+        // 清除所有体态
+        dom.pet.classList.remove('stretch-mode','squish-mode','sleepy-face','scared-face',
+            'thunder-mode','shiver-mode');
+        if (dom.tongue) dom.tongue.setAttribute('opacity','0');
+        if (dom.mouth) dom.mouth.setAttribute('d','M94,122 Q100,130 106,122');
+
+        if (mood === 'energetic') {
+            dom.pet.classList.add('stretch-mode');
+        } else if (mood === 'sleepy') {
+            dom.pet.classList.add('sleepy-face');
+        } else if (mood === 'scared') {
+            dom.pet.classList.add('scared-face');
+            dom.pet.classList.add('squish-mode');
+        } else if (mood === 'lazy') {
+            dom.pet.classList.add('squish-mode');
+        }
+    }
+
+    // ==============================================
+    //  🆕 天气速览（点猫显示）
+    // ==============================================
+    function showWeatherSummary() {
+        if (!weatherNow) {
+            say(randomMsg(weatherCat), 3000);
+            return;
+        }
+        var summary = weatherNow.desc + ' ' + weatherNow.temp + '°C';
+        summary += ' · 湿度 ' + weatherNow.humidity + '%';
+        summary += ' · 体感 ' + weatherNow.feelsLike + '°C';
+        say(summary, 4000);
+    }
+
+    // ==============================================
+    //  🆕 雨天主动预警
+    // ==============================================
+    function checkRainWarning() {
+        if (!hourlyData || !hourlyData.time) return;
+
+        var now = new Date();
+        var warningTime = null;
+        var warningCode = null;
+
+        var len = Math.min(hourlyData.time.length, 4);
+        for (var i = 0; i < len; i++) {
+            var code = hourlyData.weather_code[i];
+            if (code >= 51 && code <= 82 || code >= 95) {
+                warningTime = new Date(hourlyData.time[i]);
+                warningCode = code;
+                break;
+            }
+        }
+
+        if (!warningTime) return;
+
+        var minutes = Math.round((warningTime - now) / 60000);
+        var msg;
+        if (minutes <= 0) {
+            msg = '喵！现在在下雨，记得带伞！☂️';
+        } else if (minutes < 60) {
+            msg = '喵！' + minutes + '分钟后可能下雨，收衣服啦！🌧️';
+        } else {
+            msg = '喵~ ' + Math.round(minutes / 60) + '小时左右有雨，出门带伞哦~ ☔';
+        }
+
+        setTimeout(function() {
+            say(msg, 5000);
+            if (warningCode >= 95) setExpression('scared', 3000);
+        }, 5000);
+    }
+
+    // ==============================================
+    //  🆕 自动走路
+    // ==============================================
+    function scheduleAutoWalk() {
+        clearTimeout(autoWalkTimer);
+        if (mood === 'sleepy' || mood === 'scared') {
+            // 犯困/害怕时不爱动，间隔更长
+            autoWalkTimer = setTimeout(doWalk, 45000 + Math.random() * 60000);
+            return;
+        }
+        var delay = 18000 + Math.random() * 35000;
+        autoWalkTimer = setTimeout(doWalk, delay);
+    }
+
+    function doWalk() {
+        if (dragging || isPurring) { scheduleAutoWalk(); return; }
+
+        var vw = window.innerWidth;
+        var vh = window.innerHeight;
+        var pw = isMobile ? 70 : 100;
+        var ph = isMobile ? 84 : 120;
+        var bottomMargin = isMobile ? 70 : 120;
+
+        var targetX = 10 + Math.random() * (vw - pw - 20);
+        var targetY = 20 + Math.random() * (vh - ph - bottomMargin);
+
+        var dist = Math.sqrt(Math.pow(targetX - pos.x, 2) + Math.pow(targetY - pos.y, 2));
+        if (dist < 80) { scheduleAutoWalk(); return; }
+
+        dom.pet.classList.add('cat-walking');
+        pos.x = targetX;
+        pos.y = targetY;
+        applyPos(true);
+
+        setTimeout(function() {
+            dom.pet.classList.remove('cat-walking');
+            savePosition();
+            scheduleAutoWalk();
+        }, isMobile ? 700 : 1000);
+    }
+
+    // ==============================================
+    //  🆕 早晚问候
+    // ==============================================
+    function morningGreeting() {
+        if (greetingDone) return;
+        greetingDone = true;
+
+        var today = new Date().toDateString();
+        try {
+            var last = localStorage.getItem('catpet_last_greet');
+            if (last === today) return;
+            localStorage.setItem('catpet_last_greet', today);
+        } catch(e) { return; }
+
+        var h = new Date().getHours();
+        var greeting = '';
+        if (h >= 5 && h < 10) {
+            greeting = '早安喵~ ☀️ 今天也要元气满满！';
+            if (weatherNow) greeting += ' 最高' + weatherNow.temp + '°C~';
+        } else if (h >= 18 && h < 22) {
+            greeting = '晚上好喵~ 🌙 辛苦一天了，放松一下吧~';
+        } else {
+            return;
+        }
+
+        setTimeout(function() {
+            dom.pet.classList.add('bouncing');
+            setTimeout(function() { dom.pet.classList.remove('bouncing'); }, 500);
+            spawnHearts(8);
+            say(greeting, 4500);
+        }, 3000);
+    }
+
+    // ==============================================
+    //  🆕 撸猫检测 + 反馈
+    // ==============================================
+    function detectPetStroke(clientX, clientY) {
+        var now = Date.now();
+        var dx = Math.abs(clientX - petStrokeLastX);
+        var dt = now - petStrokeLastTime;
+
+        petStrokeLastX = clientX;
+        petStrokeLastTime = now;
+
+        // 快速滑动（100ms 内移动 > 25px）= 一次撸猫
+        if (dt < 120 && dx > 22 && !isPurring) {
+            petStrokeCount++;
+            if (petStrokeCount >= 2) {
+                triggerPurr();
+                petStrokeCount = 0;
+            }
+        }
+
+        // 超时重置计数
+        if (dt > 500) petStrokeCount = 0;
+    }
+
+    function triggerPurr() {
+        if (isPurring) return;
+        isPurring = true;
+
+        // 表情：开心眯眼
+        setExpression('happy', 1200);
+
+        // 爱心
+        spawnHearts(6);
+
+        // 呼噜气泡
+        var msg = PET_MSGS[Math.floor(Math.random() * PET_MSGS.length)];
+        say(msg, 2000);
+
+        // 手机震动
+        if (navigator.vibrate) {
+            try { navigator.vibrate([15, 25, 15]); } catch(e) {}
+        }
+
+        // 身体微微抖动
+        dom.svgWrap.style.transform = 'scaleX(1.06) scaleY(0.94)';
+        setTimeout(function() {
+            dom.svgWrap.style.transform = '';
+            isPurring = false;
+        }, 150);
+    }
+
+    // ==============================================
+    //  🆕 游戏破纪录联动
+    // ==============================================
+    function onNewHighScore(score) {
+        dom.pet.classList.add('bouncing');
+        dom.pet.classList.add('double-tap-pop');
+        setTimeout(function() { dom.pet.classList.remove('double-tap-pop'); }, 700);
+        spawnHearts(18);
+        setExpression('stars', 2500);
+        say('喵!! ' + score + '分! 太厉害了!! 🏆🎉', 4000);
+    }
 
     // ---- 创建 DOM ----
     function createDOM() {
@@ -326,6 +579,9 @@ var CatPet = (function() {
         pos.x = dragStart.px + dx;
         pos.y = dragStart.py + dy;
 
+        // 🆕 撸猫检测
+        detectPetStroke(pt.x, pt.y);
+
         // 🏃 拖拽拉伸变形
         var moveDX = pt.x - dragStart.lastX;
         var moveDY = pt.y - dragStart.lastY;
@@ -389,16 +645,13 @@ var CatPet = (function() {
         }
         lastTapTime = now;
 
-        // 单次点击
+        // 单次点击 → 天气速览
         dom.pet.classList.add('bouncing');
         setTimeout(function() { dom.pet.classList.remove('bouncing'); }, 500);
 
         spawnHearts(5);
         setExpression('happy', 600);
-
-        if (Math.random() < 0.5) {
-            say(randomMsg(weatherCat), 2500);
-        }
+        showWeatherSummary();
     }
 
     function onDoubleTap() {
@@ -499,11 +752,20 @@ var CatPet = (function() {
     // ==============================================
     //  🌤️ 天气更新（配饰 + 体态 + 表情）
     // ==============================================
-    function updateWeather(code) {
+    function updateWeather(code, wxData) {
         if (code == null) return;
         weatherCode = code;
         weatherCat = getWeatherCat(code);
+        if (wxData) weatherNow = wxData;
+        updateMood();
         applyOutfit();
+    }
+
+    // 🆕 存储逐时数据（外部调用）
+    function setHourlyData(hourly) {
+        if (!hourly) return;
+        hourlyData = hourly;
+        checkRainWarning();
     }
 
     function applyOutfit() {
@@ -654,15 +916,18 @@ var CatPet = (function() {
 
         window.addEventListener('resize', onResize);
 
+        scheduleAutoWalk();
+        morningGreeting();
+
         setTimeout(function() {
             say('嗨!我是天气小猫~ 喵呜! 💕', 3500);
         }, 2000);
     }
 
-    function setWeather(code) {
-        updateWeather(code);
+    function setWeather(code, wxData) {
+        updateWeather(code, wxData);
         var msgs = SPEECH[weatherCat];
-        if (msgs && msgs.length > 0 && Math.random() < 0.6) {
+        if (msgs && msgs.length > 0 && Math.random() < 0.3) {
             setTimeout(function() {
                 say(msgs[Math.floor(Math.random() * msgs.length)], 3000);
             }, 500);
@@ -672,6 +937,8 @@ var CatPet = (function() {
     return {
         init: init,
         setWeather: setWeather,
+        setHourlyData: setHourlyData,
+        onNewHighScore: onNewHighScore,
         say: say
     };
 

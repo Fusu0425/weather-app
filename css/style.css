@@ -1209,6 +1209,17 @@ h2 {
     75% { transform: translateX(4px) scale(0.98, 1.02); }
 }
 
+/* ---- 自动走路 ---- */
+.cat-pet.cat-walking .cat-svg-wrap {
+    animation: catWalkBob 0.35s ease-in-out infinite;
+}
+@keyframes catWalkBob {
+    0%, 100% { transform: translateY(0) scale(1); }
+    25%  { transform: translateY(-6px) scale(0.96, 1.03); }
+    50%  { transform: translateY(0) scale(1); }
+    75%  { transform: translateY(-4px) scale(0.98, 1.02); }
+}
+
 /* ---- 天气饰品 ---- */
 .cat-outfit {
     position: absolute;

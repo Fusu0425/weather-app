@@ -83,6 +83,10 @@ var Game = (function() {
             highScore = score;
             saveHighScore();
             if (highScoreEl) highScoreEl.textContent = highScore;
+            // 🆕 通知小猫桌宠
+            if (window.CatPet && CatPet.onNewHighScore) {
+                CatPet.onNewHighScore(score);
+            }
         }
     }
 
