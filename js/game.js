@@ -653,7 +653,7 @@ var Game = (function() {
 
     // ---- 分享战绩 ----
     function shareScore() {
-        var text = '🏆 我在「厦门天气」接雨滴得了 ' + score + ' 分！Lv.' + (level + 1);
+        var text = '🏆 我在「天气Weather」接雨滴得了 ' + score + ' 分！Lv.' + (level + 1);
         if (score >= highScore && score > 0) {
             text += ' 🎉新纪录！';
         }
@@ -661,7 +661,7 @@ var Game = (function() {
 
         // Web Share API（手机浏览器支持）
         if (navigator.share) {
-            navigator.share({ title: '厦门天气 · 接雨滴', text: text }).catch(function(){});
+            navigator.share({ title: '天气Weather · 接雨滴', text: text }).catch(function(){});
             return;
         }
 
@@ -728,7 +728,7 @@ var Game = (function() {
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url;
-        a.download = '厦门天气_数据备份_' + new Date().toISOString().slice(0, 10) + '.json';
+        a.download = '天气Weather_数据备份_' + new Date().toISOString().slice(0, 10) + '.json';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

@@ -1,6 +1,6 @@
 {
-  "name": "厦门天气",
-  "short_name": "厦门天气",
+  "name": "天气Weather",
+  "short_name": "天气Weather",
   "description": "厦门实时天气、AQI空气质量、7天预报与接雨滴小游戏",
   "start_url": ".",
   "scope": "/weather-app/",

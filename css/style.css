@@ -921,10 +921,22 @@ h2 {
     font-size: 20px;
     cursor: pointer;
     color: var(--text-muted);
-    padding: 4px 8px;
+    padding: 0;
     line-height: 1;
+    flex-shrink: 0;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    position: relative;
+    z-index: 2;
     -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s, color 0.15s;
 }
+.cs-search-clear:hover { background: rgba(0,0,0,0.08); color: #555; }
+.cs-search-clear:active { background: rgba(0,0,0,0.15); transform: scale(0.9); }
 
 /* 分区标签 */
 .cs-section-label {
