@@ -149,6 +149,30 @@ var App = (function() {
                 fsBtn.style.display = 'none';
             }
         }
+
+        // 分享按钮
+        var shareBtn = document.getElementById('shareBtn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', function() {
+                if (Game && Game.shareScore) Game.shareScore();
+            });
+        }
+
+        // 导出数据
+        var exportBtn = document.getElementById('exportBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', function() {
+                if (Game && Game.exportData) Game.exportData();
+            });
+        }
+
+        // 导入数据
+        var importBtn = document.getElementById('importBtn');
+        if (importBtn) {
+            importBtn.addEventListener('click', function() {
+                if (Game && Game.importData) Game.importData();
+            });
+        }
     }
 
     // ---- 全屏切换 ----

@@ -651,9 +651,153 @@ var Game = (function() {
         loop();
     }
 
+    // ---- 分享战绩 ----
+    function shareScore() {
+        var text = '🏆 我在「厦门天气」接雨滴得了 ' + score + ' 分！Lv.' + (level + 1);
+        if (score >= highScore && score > 0) {
+            text += ' 🎉新纪录！';
+        }
+        text += ' 快来挑战我吧~ ☔\n\nhttps://fusu0425.github.io/weather-app/';
+
+        // Web Share API（手机浏览器支持）
+        if (navigator.share) {
+            navigator.share({ title: '厦门天气 · 接雨滴', text: text }).catch(function(){});
+            return;
+        }
+
+        // 桌面端回退：复制到剪贴板
+        copyToClipboard(text);
+    }
+
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function() {
+                showToast('✅ 战绩已复制，去粘贴分享吧！');
+            }).catch(function() {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+
+    function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed'; ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); showToast('✅ 战绩已复制，去粘贴分享吧！'); }
+        catch(e) { showToast('⚠️ 复制失败，请截图分享吧'); }
+        document.body.removeChild(ta);
+    }
+
+    function showToast(msg) {
+        var existing = document.getElementById('appToast');
+        if (existing) { existing.remove(); }
+        var t = document.createElement('div');
+        t.id = 'appToast';
+        t.textContent = msg;
+        document.body.appendChild(t);
+        t.offsetHeight;
+        t.classList.add('show');
+        setTimeout(function() {
+            t.classList.remove('show');
+            setTimeout(function() { if (t.parentNode) t.remove(); }, 400);
+        }, 2000);
+    }
+
+    // ---- 数据导出 ----
+    function exportAllData() {
+        var data = {
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            highScore: loadHighScore(),
+            recentCities: (function() {
+                try { return JSON.parse(localStorage.getItem('weather_recent_cities')) || []; }
+                catch(e) { return []; }
+            })(),
+            catPetPos: (function() {
+                try { return JSON.parse(localStorage.getItem('catpet_pos')) || null; }
+                catch(e) { return null; }
+            })()
+        };
+
+        var json = JSON.stringify(data, null, 2);
+        var blob = new Blob([json], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = '厦门天气_数据备份_' + new Date().toISOString().slice(0, 10) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('💾 数据已导出，请妥善保存');
+    }
+
+    // ---- 数据导入 ----
+    function importAllData(callback) {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+
+        input.addEventListener('change', function() {
+            var file = input.files[0];
+            if (!file) { document.body.removeChild(input); return; }
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var data = JSON.parse(e.target.result);
+                    if (!data.version) throw new Error('无效的备份文件');
+
+                    // 恢复数据
+                    if (typeof data.highScore === 'number') {
+                        var current = loadHighScore();
+                        if (data.highScore > current) {
+                            highScore = data.highScore;
+                            saveHighScore();
+                            if (highScoreEl) highScoreEl.textContent = highScore;
+                        }
+                    }
+                    if (Array.isArray(data.recentCities)) {
+                        localStorage.setItem('weather_recent_cities', JSON.stringify(data.recentCities));
+                    }
+                    if (data.catPetPos && typeof data.catPetPos.x === 'number') {
+                        localStorage.setItem('catpet_pos', JSON.stringify(data.catPetPos));
+                    }
+
+                    showToast('✅ 数据恢复成功！刷新后小猫位置也会恢复~');
+                    if (callback) callback();
+
+                    // 刷新城市列表
+                    if (window.App && App.refreshWeather) {
+                        App.refreshWeather();
+                    }
+                } catch(err) {
+                    showToast('⚠️ 文件格式不正确，请检查');
+                }
+            };
+            reader.readAsText(file);
+            document.body.removeChild(input);
+        });
+
+        input.click();
+    }
+
     // 暴露到全局 (供 App 调用)
     return {
-        init: init
+        init: init,
+        shareScore: shareScore,
+        exportData: exportAllData,
+        importData: importAllData,
+        isGameOver: function() { return gameOver; },
+        getScore: function() { return score; },
+        getLevel: function() { return level; },
+        getHighScore: function() { return highScore; }
     };
 
 })();

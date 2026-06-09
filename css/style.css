@@ -671,6 +671,11 @@ h2 {
 .game-scores strong { color: #667eea; font-size: 1.05rem; }
 .game-scores .high-score strong { color: #f39c12; }
 
+.game-actions {
+    display: flex;
+    gap: 8px;
+}
+
 .game-btn {
     padding: 10px 28px;
     border: none;
@@ -685,6 +690,10 @@ h2 {
 }
 
 .game-btn:active { transform: scale(0.95); }
+
+.share-btn {
+    background: linear-gradient(135deg, #f39c12, #e74c3c);
+}
 
 /* ---- 页脚 ---- */
 .app-footer {
@@ -706,6 +715,55 @@ h2 {
 .footer-info {
     font-size: 11px !important;
     color: rgba(255,255,255,0.4);
+}
+
+/* ---- 数据管理 ---- */
+.footer-data-mgmt {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.footer-link-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.45);
+    font-size: 11px !important;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: color 0.2s, background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.footer-link-btn:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.1); }
+.footer-link-btn:active { background: rgba(255,255,255,0.18); }
+
+/* ---- Toast 提示 ---- */
+#appToast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(30,30,50,0.92);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10001;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    white-space: nowrap;
+    max-width: 90vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#appToast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 
 /* ---- 响应式 ---- */

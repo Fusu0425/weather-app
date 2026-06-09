@@ -89,7 +89,10 @@
                         <span>得分 <strong id="score">0</strong></span>
                         <span class="high-score">🏆 <strong id="highScore">0</strong></span>
                     </div>
-                    <button class="game-btn" id="restartBtn">重来</button>
+                    <div class="game-actions">
+                        <button class="game-btn" id="restartBtn">重来</button>
+                        <button class="game-btn share-btn" id="shareBtn" title="分享战绩">📤 分享</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -98,6 +101,10 @@
         <div class="app-footer">
             <span class="footer-warm" id="warmMsg">🌸 生活明朗，万物可爱</span>
             <span class="footer-info">天气Weather · Open-Meteo · <span id="refreshHint"></span></span>
+            <div class="footer-data-mgmt">
+                <button class="footer-link-btn" id="exportBtn" title="导出数据备份">💾 备份</button>
+                <button class="footer-link-btn" id="importBtn" title="从备份恢复">📥 恢复</button>
+            </div>
         </div>
     </div>
 
